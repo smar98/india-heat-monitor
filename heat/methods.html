@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Methods &amp; sources — India Humid Heat Monitor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Methods &amp; sources</div>
+    <h1>How this dashboard is built</h1>
+    <p class="dek">
+      Every formula, threshold, and data source used on this dashboard,
+      with validity ranges and honest caveats. If a number on the main
+      dashboard can't be traced to something on this page, treat it as a
+      bug and <a href="https://github.com/smar98/india-heat-monitor/issues">report it</a>.
+    </p>
+    <div class="meta-row">
+      <span><a href="index.html">&larr; Back to dashboard</a></span>
+      <span><a href="https://github.com/smar98/india-heat-monitor">Source code</a></span>
+    </div>
+  </header>
+
+  <section>
+    <h2>The central question</h2>
+    <p class="section-note">
+      Public heat communication in India runs mostly on dry-bulb air
+      temperature. This dashboard asks: which cities look less dangerous on
+      that ordinary ranking, but become high-risk once humidity, radiant
+      heat, and time of day are accounted for? A prior-art review (see the
+      repository's <code>existing_tools_research.md</code>) found serious
+      tools for occupational heat stress, thermal-comfort datasets, and
+      live weather maps, but no public India city-ranking tool built
+      specifically around this dry-bulb-vs-humid-heat misranking. This
+      dashboard exists to fill that specific gap &mdash; not to claim no
+      one tracks heat risk in India, which official IMD/NDMA heat-wave
+      communication clearly does.
+    </p>
+  </section>
+
+  <section>
+    <h2>Three metrics, kept strictly separate</h2>
+    <p class="section-note">
+      These are different physical quantities with different risk
+      meanings. This dashboard never compares wet-bulb values against
+      WBGT-style thresholds, or vice versa.
+    </p>
+
+    <h3>1. Dry-bulb temperature</h3>
+    <p>
+      The ordinary air temperature, taken as-is from Open-Meteo. This is
+      the public-conversation baseline this dashboard is contrasting
+      against.
+    </p>
+
+    <h3>2. Wet-bulb temperature — Stull (2011) approximation</h3>
+    <p>
+      Wet-bulb temperature reflects how effectively the body can cool
+      itself by sweat evaporation; unlike dry-bulb temperature, it
+      accounts for humidity. Computed here via the empirical approximation
+      published in:
+    </p>
+    <p>
+      Stull, R., 2011: "Wet-Bulb Temperature from Relative Humidity and
+      Air Temperature." <em>Journal of Applied Meteorology and
+      Climatology</em>, 50(11), 2267&ndash;2269.
+      <a href="https://doi.org/10.1175/JAMC-D-11-0143.1">doi:10.1175/JAMC-D-11-0143.1</a>
+    </p>
+    <p>
+      <strong>Formula</strong> (T = dry-bulb temp in &deg;C, RH = relative
+      humidity in %):
+    </p>
+    <pre>Tw = T&middot;atan[0.151977&middot;(RH + 8.313659)^0.5]
+     + atan(T + RH) &minus; atan(RH &minus; 1.676331)
+     + 0.00391838&middot;RH^1.5&middot;atan(0.023101&middot;RH)
+     &minus; 4.686035</pre>
+    <p>
+      <strong>Validity range:</strong> RH 5&ndash;99%, T &minus;20&deg;C to
+      50&deg;C (accuracy degrades in the combined very-low-humidity /
+      very-cold corner of that range, which this dashboard's cities never
+      approach). <strong>Error bounds:</strong> &minus;1&deg;C to
+      +0.65&deg;C, mean absolute error under 0.3&deg;C. The approximation
+      assumes sea-level (101.325 kPa) pressure; all ~50 cities covered here
+      are lowland or coastal, so this holds, but it's worth stating plainly
+      for a city at meaningful elevation.
+    </p>
+
+    <h3>3. Estimated WBGT — Liljegren et al. (2008) method</h3>
+    <p>
+      Wet Bulb Globe Temperature (WBGT) is the standard metric for
+      outdoor occupational heat-stress risk: unlike wet-bulb temperature
+      alone, it also incorporates radiant heat (solar radiation) and wind.
+      True WBGT requires a physical instrument (a black globe thermometer)
+      that this dashboard does not have access to. Instead, this is an
+      <strong>estimate</strong> derived purely from ordinary weather
+      station variables (temperature, humidity, solar radiation, wind),
+      using the method from:
+    </p>
+    <p>
+      Liljegren, J. C., R. A. Carhart, P. Lawday, S. Tschopp, and R. Sharp,
+      2008: "Modeling the Wet Bulb Globe Temperature Using Standard
+      Meteorological Measurements." <em>The Journal of Occupational and
+      Environmental Hygiene</em>, 5(10), 645&ndash;655.
+      <a href="https://doi.org/10.1080/15459620802310770">doi:10.1080/15459620802310770</a>
+    </p>
+    <p>
+      The implementation here is a Python port of James Liljegren's
+      original 1.1 C code (originally published by UChicago Argonne, LLC
+      under contract with the U.S. Department of Energy), obtained via the
+      MIT-licensed <a href="https://github.com/mdljts/wbgt">mdljts/wbgt</a>
+      R package wrapper. The final combining formula, taken directly from
+      that source code:
+    </p>
+    <pre>WBGT = 0.1&middot;T_air + 0.2&middot;T_globe + 0.7&middot;T_natural_wet_bulb</pre>
+    <p>
+      <strong>Verification:</strong> rather than trust the port by
+      inspection, the original C code (with its own demo driver) was
+      compiled directly with <code>gcc</code> and run on two test cases (a
+      hot/humid daytime scenario and a nighttime scenario). The Python
+      port's output matched the compiled C binary's actual output to
+      within about 0.02&ndash;0.1&deg;C &mdash; consistent with ordinary
+      floating-point precision differences between C's <code>float</code>
+      and Python's <code>double</code>, not a translation error. Both test
+      cases are kept as permanent automated regression tests in the
+      repository (<code>tests/test_liljegren_wbgt.py</code>).
+    </p>
+    <p>
+      <strong>Caveat:</strong> this is an estimate from meteorological
+      inputs, not a physical measurement. Liljegren-based estimates
+      typically agree with measured WBGT to within about 1&deg;C under
+      normal conditions, worse in extreme hot-dry regimes.
+    </p>
+  </section>
+
+  <section>
+    <h2>Outdoor-work risk reference — NIOSH RAL/REL</h2>
+    <p class="section-note">
+      This dashboard does <strong>not</strong> use a flat "safe/moderate/
+      danger" WBGT scale. An earlier draft did, using invented thresholds
+      loosely modeled on ISO 7243 (&lt;28&deg;C / 28&ndash;30&deg;C /
+      30&ndash;32&deg;C / &gt;32&deg;C) &mdash; but checking those against
+      the real standard found that ACGIH's and ISO 7243's actual tables
+      vary continuously by workload and work/rest duty cycle, and are
+      themselves paywalled (confirmed directly via OSHA's own Technical
+      Manual, which states the ACGIH heat-stress tables "are copyrighted
+      by ACGIH and is not publicly available"). Publishing invented
+      numbers under a borrowed standard's name would have been dishonest,
+      so instead this dashboard uses NIOSH's own public formula, from:
+    </p>
+    <p>
+      NIOSH, 2016: "Criteria for a Recommended Standard: Occupational
+      Exposure to Heat and Hot Environments." DHHS (NIOSH) Publication
+      2016-106, Chapter 8.1 (equations, p.93&ndash;94) and Table 5-1
+      (cross-standard comparison, p.101).
+      <a href="https://www.cdc.gov/niosh/docs/2016-106/">cdc.gov/niosh/docs/2016-106</a>
+    </p>
+    <pre>RAL [&deg;C-WBGT] = 59.9 &minus; 14.1&middot;log10(M)   (unacclimatized workers)
+REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</pre>
+    <p>
+      where M is the 1-hour time-weighted-average metabolic rate, in
+      watts, for a "standard" 70kg/1.8m&sup2; worker doing continuous
+      (60 min/h) work. This dashboard evaluates both formulas at a
+      representative <strong>moderate</strong> workload (300 kcal/h
+      &asymp; 349W &mdash; the same value NIOSH's own worked example in
+      the document uses), giving reference lines around 24.05&deg;C (RAL)
+      and 27.46&deg;C (REL).
+    </p>
+    <p class="caveat">
+      These are NOT flat "safe/danger" cutoffs. They vary continuously
+      with workload, and depend on acclimatization, clothing, and work/rest
+      scheduling &mdash; none of which this dashboard measures directly.
+      Language on this site always says "lower-risk outdoor work windows
+      under estimated WBGT assumptions," never "safe hours," and every
+      threshold shown is labeled with the specific NIOSH reference it
+      corresponds to.
+    </p>
+  </section>
+
+  <section>
+    <h2>Data sources</h2>
+    <h3>Live forecast</h3>
+    <p>
+      <a href="https://open-meteo.com/">Open-Meteo</a> Forecast API,
+      hourly temperature, relative humidity, shortwave solar radiation,
+      wind speed, and surface pressure, for all ~50 cities in a single
+      batched request every 6 hours via GitHub Actions. No API key
+      required; free tier is 10,000 calls/day, and this pipeline uses
+      exactly one call per run.
+    </p>
+    <h3>1991&ndash;2020 historical normal</h3>
+    <p>
+      Open-Meteo's Historical Weather API (ERA5 reanalysis), pulled once
+      per city (not on the live schedule) for 1991&ndash;2020, collapsed
+      to per-calendar-date climatological means and maxima for both
+      dry-bulb and wet-bulb temperature.
+    </p>
+    <p class="caveat">
+      ERA5 is a global reanalysis on a roughly 25&ndash;31km grid &mdash;
+      it is not a street-level station reading, and a real city's
+      microclimate (urban heat island effects, a specific neighborhood's
+      conditions) can differ from the grid-cell value shown here.
+    </p>
+    <h3>City list</h3>
+    <p>
+      50 Indian cities selected from
+      <a href="https://github.com/Vynex/indian-cities-geodata">Vynex/indian-cities-geodata</a>
+      (Apache 2.0 licensed; coordinates sourced from Census 2011 population
+      figures and Google Maps), taking the largest cities by population
+      with deliberate substitutions to ensure humid coastal and eastern
+      cities are well represented rather than dominated by drier, better-
+      known cities.
+    </p>
+    <h3>Map boundaries</h3>
+    <p>
+      India state/UT boundaries from
+      <a href="https://github.com/datameet/maps">DataMeet India community's "maps" repository</a>
+      (MIT licensed), simplified from 15.7MB to about 140KB using
+      <code>mapshaper</code> for faster loading, with all boundary shapes
+      otherwise unmodified. See
+      <a href="data/india_states.geojson.LICENSE.txt">the license/attribution file</a>
+      in the repository for full details.
+    </p>
+  </section>
+
+  <section>
+    <h2>What "misranking delta" means</h2>
+    <p>
+      Cities are ranked twice each day: once by today's peak (max)
+      dry-bulb temperature, and once by today's peak estimated WBGT. The
+      misranking delta is dry-bulb rank minus WBGT rank. A large positive
+      delta means a city looks unremarkable on ordinary temperature (a
+      high rank number) but is near the top of the humid-heat danger list
+      (a low rank number) &mdash; a "climber," in this dashboard's
+      language. This computation runs identically in the map and the
+      rank-shift chart (both read from <code>heat/js/data.js</code>) so
+      the two views can never disagree with each other.
+    </p>
+  </section>
+
+  <section>
+    <h2>AI-transparency note</h2>
+    <p>
+      This dashboard's data pipeline, scientific-formula implementations,
+      and frontend code were built with AI assistance (Claude, Anthropic),
+      working from a project brief and editorial decisions set by the
+      site's author. Where that matters for trusting the numbers on this
+      page:
+    </p>
+    <ul>
+      <li>
+        Every formula was checked against a primary source (the original
+        paper or standard, or a citation of it that could itself be
+        verified) rather than accepted from a first-pass summary. Where a
+        primary source could not be reached (the ACGIH/ISO 7243 exact
+        tables, which are genuinely paywalled), that gap is stated above
+        rather than papered over with an invented number presented as
+        authoritative.
+      </li>
+      <li>
+        The Liljegren WBGT port was verified by compiling the original
+        author's C code directly and comparing outputs numerically, not
+        just by reading the ported code and judging it plausible.
+      </li>
+      <li>
+        All reproducible pipeline scripts (data fetching, the wet-bulb
+        and WBGT calculations, the historical-normals builder) are in the
+        <a href="https://github.com/smar98/india-heat-monitor">public repository</a>,
+        along with an automated test suite and a running build log
+        (<code>BUILD_LOG.md</code>) documenting what was built, what broke,
+        and how each issue was found and fixed.
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p><a href="index.html">&larr; Back to dashboard</a></p>
+  </footer>
+
+</div>
+</body>
+</html>

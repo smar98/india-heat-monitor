@@ -37,9 +37,24 @@ function renderWorkdayClock(cityId) {
     return;
   }
 
-  const rowLength = 24;
-  const rows = [hourly.slice(0, rowLength), hourly.slice(rowLength, rowLength * 2)];
-  const rowLabels = ["Today", "Tomorrow"];
+  // Group by actual IST calendar date rather than assuming the first 24
+  // array entries are "today" -- if the data hasn't refreshed yet right
+  // around IST midnight, a blind slice(0,24) would mislabel yesterday's
+  // remaining hours as "today" (see BUILD_LOG.md step 7).
+  const dateKeys = [...new Set(hourly.map((h) => h.istDateKey))].sort();
+  const rows = dateKeys.slice(0, 2).map((key) => hourly.filter((h) => h.istDateKey === key));
+  // Label rows with the real IST date, and only claim "Today"/"Tomorrow"
+  // when the date actually is today/tomorrow in IST -- so stale data reads
+  // as stale instead of silently mislabeled.
+  const todayIst = nowInIst().dateKey;
+  const rowLabels = dateKeys.slice(0, 2).map((key) => {
+    const dayNum = (k) => Math.round(Date.parse(k + "T00:00Z") / 86400000);
+    const diff = dayNum(key) - dayNum(todayIst);
+    const short = key.slice(5).replace("-", "/"); // "07-05" -> "07/05"
+    if (diff === 0) return `Today ${short}`;
+    if (diff === 1) return `Tmrw ${short}`;
+    return short;
+  });
 
   const table = document.createElement("div");
   table.className = "clock-grid";

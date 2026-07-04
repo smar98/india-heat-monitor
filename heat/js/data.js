@@ -50,35 +50,65 @@ function loadAllData() {
   return _loadAllDataPromise;
 }
 
-/** "MM-DD" for a given Date, in UTC (matches how normals.json is keyed). */
-function monthDayKey(date) {
-  const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(date.getUTCDate()).padStart(2, "0");
-  return `${mm}-${dd}`;
+// IST = UTC+5:30, fixed offset (India does not observe daylight saving time).
+const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+
+/** The real current moment, expressed as IST wall-clock Y/M/D/H/M (a plain
+ * object, not a Date, since we only ever need to compare/format its parts --
+ * building a real Date from these would just reintroduce a timezone to
+ * fight with). */
+function nowInIst() {
+  const nowUtcMs = Date.now();
+  const istMs = nowUtcMs + IST_OFFSET_MS;
+  const d = new Date(istMs); // used purely as a UTC-field calendar calculator
+  return {
+    dateKey: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`,
+    nowUtcMs,
+  };
 }
+
+/** "YYYY-MM-DD" prefix of an Open-Meteo IST-labeled time string like "2026-07-04T13:00". */
+function istDateKeyOf(timeIstString) {
+  return timeIstString.slice(0, 10);
+}
+
+// Note on normals keying: normals.json aggregates ERA5 hours into UTC
+// calendar dates (the one-time compute_normals.py run requested
+// timezone=UTC), while the live pipeline works in IST calendar days. We
+// look up the normal for today's IST date's "MM-DD". At worst this pairs
+// an IST day against a normal whose 24-hour aggregation window is offset
+// by 5.5 hours -- for a 30-year climatological average that changes the
+// value by well under 0.1 degC day-to-day, so it's an accepted
+// approximation (documented in BUILD_LOG.md step 7), not an oversight.
 
 /**
  * Builds one metrics record per city: today's peak dry-bulb, peak WBGT,
- * peak wet-bulb, the most-recent hour's wet-bulb ("current"), and the
- * anomaly of today's peak wet-bulb vs. the 1991-2020 normal for this
+ * peak wet-bulb, the hour nearest the real current moment ("current"), and
+ * the anomaly of today's peak wet-bulb vs. the 1991-2020 normal for this
  * calendar date. Cities with no valid hourly data are skipped (not
  * zero-filled) so a data gap can't silently masquerade as "no risk."
+ *
+ * "Today" is the actual current IST calendar date (matched against each
+ * hour's real time_ist field), not just "the first 24 array entries" --
+ * that distinction matters if the data was fetched close to IST midnight
+ * and hasn't refreshed yet by the time a user loads the page.
  */
 function buildCityMetrics(cities, latest, normals) {
   const cityById = new Map(cities.map((c) => [c.id, c]));
   const normalsById = normals.cities; // keyed by string(id) in normals.json
-  const now = new Date();
-  const todayKey = monthDayKey(now);
+  const { dateKey: todayIstDateKey, nowUtcMs } = nowInIst();
+  // normals.json is keyed "MM-DD"; use the IST date's month-day so the
+  // normal we compare against matches the same calendar day the "today"
+  // window (below) is built from.
+  const todayKey = todayIstDateKey.slice(5);
 
   const records = [];
   for (const cityLatest of latest.cities) {
     const city = cityById.get(cityLatest.id);
     if (!city || !cityLatest.hourly || cityLatest.hourly.length === 0) continue;
 
-    // "Today" = the first 24 hours of the forecast window (matches the
-    // pipeline's forecast_days=2 fetch: hour 0 is "now" onward).
-    const todayHours = cityLatest.hourly.slice(0, 24);
-    if (todayHours.length === 0) continue;
+    const todayHours = cityLatest.hourly.filter((h) => istDateKeyOf(h.time_ist) === todayIstDateKey);
+    if (todayHours.length === 0) continue; // data hasn't refreshed for today's IST date yet
 
     const dryBulbValues = todayHours.map((h) => h.temp_c).filter((v) => v != null);
     const wbgtValues = todayHours
@@ -91,8 +121,16 @@ function buildCityMetrics(cities, latest, normals) {
     const peakDryBulb = Math.max(...dryBulbValues);
     const peakWbgt = Math.max(...wbgtValues);
     const peakWetBulb = wetBulbValues.length ? Math.max(...wetBulbValues) : null;
-    const currentWetBulb = todayHours[0].wet_bulb_c;
-    const currentWbgt = todayHours[0].wbgt_status === 0 ? todayHours[0].wbgt_c : null;
+
+    // "Current" = the hour whose true UTC instant is nearest the real
+    // current moment, not just the first array entry (which used to be
+    // wrong by up to ~12 hours -- see BUILD_LOG.md step 7).
+    const nearestHour = [...cityLatest.hourly].sort(
+      (a, b) => Math.abs(new Date(a.time_utc + "Z").getTime() - nowUtcMs) -
+                Math.abs(new Date(b.time_utc + "Z").getTime() - nowUtcMs)
+    )[0];
+    const currentWetBulb = nearestHour ? nearestHour.wet_bulb_c : null;
+    const currentWbgt = nearestHour && nearestHour.wbgt_status === 0 ? nearestHour.wbgt_c : null;
 
     const cityNormals = normalsById[String(city.id)];
     const normalToday = cityNormals ? cityNormals.normals_by_date[todayKey] : null;
@@ -114,6 +152,7 @@ function buildCityMetrics(cities, latest, normals) {
       currentWbgt,
       wetBulbAnomaly,
       normalMaxWetBulb: normalToday ? normalToday.normal_max_wet_bulb_c : null,
+      peakWbgtHour: todayHours.find((h) => h.wbgt_status === 0 && h.wbgt_c === peakWbgt) || null,
     });
   }
   return records;
@@ -162,34 +201,32 @@ function wbgtRiskTier(wbgtC) {
   return "below-ral";
 }
 
-// IST = UTC+5:30, fixed offset (India does not observe daylight saving time).
-const IST_OFFSET_MINUTES = 5 * 60 + 30;
-
 /**
- * Builds the full hourly series (today + tomorrow) for one city, converted
- * to IST wall-clock time for display, with a `isNight` flag (19:00-06:00
- * IST) -- used by the workday clock to make explicit that humid heat can
- * stay in a higher risk band well after sunset, which plain "avoid the
- * afternoon" guidance misses.
+ * Builds the full hourly series (today + tomorrow) for one city, in IST
+ * wall-clock time for display, with an `isNight` flag (19:00-06:00 IST) --
+ * used by the workday clock to make explicit that humid heat can stay in a
+ * higher risk band well after sunset, which plain "avoid the afternoon"
+ * guidance misses.
+ *
+ * time_ist is already IST wall-clock time as labeled by Open-Meteo (the
+ * pipeline requests timezone=Asia/Kolkata specifically so this is a direct
+ * read, not a UTC+5:30 arithmetic conversion done client-side -- an earlier
+ * version did that arithmetic and got the label wrong, see BUILD_LOG.md
+ * step 7).
  */
 function buildHourlySeriesForCity(cityId, latest) {
   const cityLatest = latest.cities.find((c) => c.id === cityId);
   if (!cityLatest) return [];
 
   return cityLatest.hourly.map((h) => {
-    const utcDate = new Date(h.time_utc + "Z");
-    const istDate = new Date(utcDate.getTime() + IST_OFFSET_MINUTES * 60 * 1000);
-    const istHour = istDate.getUTCHours();
-    const istMinute = istDate.getUTCMinutes();
-    // Open-Meteo's hourly timestamps are on the UTC hour, and IST is
-    // UTC+5:30, so every converted IST time lands on :30 (or :00, on the
-    // rare exact-hour boundary) -- never assume :00 or the label lies.
+    const istHour = Number(h.time_ist.slice(11, 13));
+    const istMinute = Number(h.time_ist.slice(14, 16));
     const isNight = istHour >= 19 || istHour < 6;
     return {
       ...h,
-      istDate,
       istHour,
       istMinute,
+      istDateKey: istDateKeyOf(h.time_ist),
       istLabel: `${String(istHour).padStart(2, "0")}:${String(istMinute).padStart(2, "0")}`,
       isNight,
       riskTier: h.wbgt_status === 0 && h.wbgt_c != null ? wbgtRiskTier(h.wbgt_c) : "unknown",

@@ -27,6 +27,47 @@
     </div>
   </header>
 
+  <details class="explainer">
+    <summary>Why this matters &mdash; and how to read this dashboard</summary>
+    <div class="explainer-body">
+      <p>
+        <strong>The problem.</strong> Heat advisories, news rankings, and
+        much of India's public heat conversation run on dry-bulb air
+        temperature &mdash; the number a regular thermometer reads. But the
+        body doesn't overheat by temperature alone: it cools itself by
+        evaporating sweat, and humidity throttles that. Radiant sun load
+        and wind change the picture further. Two cities at 35&deg;C can
+        carry very different physiological risk.
+      </p>
+      <p>
+        <strong>What this dashboard does.</strong> It re-ranks ~50 large
+        Indian cities twice a day-window: once by ordinary peak temperature,
+        once by estimated WBGT &mdash; an occupational heat-stress metric
+        that folds in humidity, sun, and wind. The gap between a city's two
+        ranks is the <em>misranking delta</em>. Cities with a big positive
+        delta (&#9650;) are the ones the ordinary ranking understates
+        today.
+      </p>
+      <p>
+        <strong>What to look for.</strong> The map's warm-colored dots and
+        the chart's highlighted lines are today's climbers. The "biggest
+        climbers" card explains <em>why</em> each one climbed (humidity,
+        sun, wind) from the same data used to compute it. Note the
+        direction is not fixed: on some days inland northern cities climb
+        and humid coastal ones fall, because sun and wind matter too. That
+        day-to-day instability is itself the finding &mdash; a fixed
+        temperature ranking can't capture it.
+      </p>
+      <p>
+        <strong>What this does not claim.</strong> No "safe hours," no
+        street-level precision (the underlying data is a ~25km grid), and
+        no measured WBGT &mdash; it's estimated from weather variables.
+        Full formulas, sources, and caveats on the
+        <a href="methods.html">methods page</a>.
+      </p>
+    </div>
+  </details>
+
   <section id="map-section">
     <h2>The map</h2>
     <p class="section-note">
@@ -39,7 +80,10 @@
       <button data-layer="wetbulb">Current wet-bulb</button>
       <button data-layer="anomaly">Anomaly vs. normal</button>
     </div>
-    <div id="map"></div>
+    <div class="map-flex">
+      <div id="map"></div>
+      <aside id="insights-card"></aside>
+    </div>
     <p class="legend" id="layer-caption"></p>
     <p class="caveat">
       ERA5/Open-Meteo data is on a ~25km grid &mdash; a street-level reading
@@ -91,12 +135,20 @@
 
   <footer>
     <p>
-      Estimated WBGT and wet-bulb temperature are model outputs from
-      weather-station-grade data (Open-Meteo), not physical measurements.
-      Language on this site describes "lower-risk outdoor work windows
-      under estimated WBGT assumptions" &mdash; never "safe hours." Full
-      methodology, validity ranges, and an AI-transparency note are on the
-      <a href="methods.html">methods page</a>.
+      Estimated WBGT and wet-bulb temperature are model outputs computed
+      from standard meteorological variables in gridded forecast/reanalysis
+      data (Open-Meteo) &mdash; not station readings, and not physical
+      measurements. Language on this site describes "lower-risk outdoor
+      work windows under estimated WBGT assumptions" &mdash; never "safe
+      hours." Full methodology, validity ranges, and an AI-transparency
+      note are on the <a href="methods.html">methods page</a>.
+    </p>
+    <p>
+      Built and edited by Sanchit Mardia
+      (<a href="https://github.com/smar98">github.com/smar98</a>) with AI
+      assistance &mdash; see the
+      <a href="methods.html">AI-transparency note</a>. Corrections and
+      questions: <a href="https://github.com/smar98/india-heat-monitor/issues">open an issue</a>.
     </p>
   </footer>
 
@@ -108,6 +160,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.17/dist/plot.umd.min.js"></script>
 <script src="js/data.js"></script>
 <script src="js/map.js"></script>
+<script src="js/insights.js"></script>
 <script src="js/slope-chart.js"></script>
 <script src="js/workday-clock.js"></script>
 </body>

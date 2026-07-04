@@ -83,9 +83,14 @@
       very-cold corner of that range, which this dashboard's cities never
       approach). <strong>Error bounds:</strong> &minus;1&deg;C to
       +0.65&deg;C, mean absolute error under 0.3&deg;C. The approximation
-      assumes sea-level (101.325 kPa) pressure; all ~50 cities covered here
-      are lowland or coastal, so this holds, but it's worth stating plainly
-      for a city at meaningful elevation.
+      assumes standard sea-level (101.325 kPa) pressure. Most of the ~50
+      cities here are low-elevation, but not all: for elevated cities
+      &mdash; Srinagar (~1,600m), Bengaluru (~900m), and a few others in
+      the 400&ndash;700m band &mdash; the wet-bulb values shown are
+      slightly less exact (the formula modestly overestimates wet-bulb as
+      pressure falls below sea level). The estimated WBGT is unaffected by
+      this particular caveat: the Liljegren model takes each city's actual
+      surface pressure as an input.
     </p>
 
     <h3>3. Estimated WBGT — Liljegren et al. (2008) method</h3>
@@ -95,9 +100,10 @@
       alone, it also incorporates radiant heat (solar radiation) and wind.
       True WBGT requires a physical instrument (a black globe thermometer)
       that this dashboard does not have access to. Instead, this is an
-      <strong>estimate</strong> derived purely from ordinary weather
-      station variables (temperature, humidity, solar radiation, wind),
-      using the method from:
+      <strong>estimate</strong> derived purely from standard meteorological
+      variables (temperature, humidity, solar radiation, wind) &mdash;
+      supplied here by gridded forecast/reanalysis data, not physical
+      station instruments &mdash; using the method from:
     </p>
     <p>
       Liljegren, J. C., R. A. Carhart, P. Lawday, S. Tschopp, and R. Sharp,
@@ -237,6 +243,16 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
       language. This computation runs identically in the map and the
       rank-shift chart (both read from <code>heat/js/data.js</code>) so
       the two views can never disagree with each other.
+    </p>
+    <p class="caveat">
+      The direction of the shift is not fixed, and this dashboard does not
+      claim that humid coastal cities are always the underrated ones.
+      Because estimated WBGT also weighs solar radiation and wind, there
+      are days when inland northern cities climb and coastal cities fall.
+      The claim being made is narrower and more defensible: a dry-bulb
+      ranking misorders cities' physiological heat risk, and <em>which</em>
+      cities it misorders changes with the weather &mdash; which is exactly
+      why a live view exists instead of a one-off infographic.
     </p>
   </section>
 

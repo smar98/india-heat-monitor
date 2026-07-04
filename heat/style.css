@@ -69,6 +69,108 @@ section {
   margin: 2rem 0;
 }
 
+.explainer {
+  margin: 1.25rem 0;
+  border: 1px solid var(--ink);
+  background: #fbf9f3;
+}
+
+.explainer summary {
+  cursor: pointer;
+  padding: 0.6rem 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-danger);
+}
+
+.explainer summary::marker { color: var(--ink); }
+
+.explainer-body {
+  padding: 0 1rem 0.75rem;
+  border-top: 1px solid var(--rule);
+}
+
+.explainer-body p {
+  font-size: 0.92rem;
+  max-width: 72ch;
+}
+
+.map-flex {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.map-flex #map { flex: 1 1 auto; min-width: 0; }
+
+#insights-card {
+  flex: 0 0 300px;
+  border: 1px solid var(--ink);
+  background: #fbf9f3;
+  padding: 0.75rem 0.9rem;
+  overflow-y: auto;
+  max-height: 560px;
+}
+
+#insights-card h3 {
+  margin: 0.25rem 0 0.2rem;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#insights-card h3 + .insights-sub { margin-top: 0; }
+
+.insights-sub {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin: 0.1rem 0 0.6rem;
+}
+
+.mover-row {
+  border-left: 3px solid var(--rule);
+  padding: 0.3rem 0 0.3rem 0.55rem;
+  margin-bottom: 0.55rem;
+}
+
+.mover-up { border-left-color: var(--accent-danger); }
+.mover-down { border-left-color: var(--accent-neutral); }
+
+.mover-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.mover-name { font-weight: 700; }
+
+.mover-delta { font-family: var(--mono); }
+.mover-up .mover-delta { color: var(--accent-danger); }
+.mover-down .mover-delta { color: var(--accent-neutral); }
+
+.mover-detail {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+}
+
+.mover-reason {
+  font-size: 0.78rem;
+  color: var(--ink);
+  font-style: italic;
+}
+
+.insights-note {
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+  padding-top: 0.5rem;
+  margin-top: 0.75rem;
+}
+
 section > h2 {
   font-size: 1.05rem;
   text-transform: uppercase;
@@ -204,7 +306,7 @@ section > p.section-note {
 .clock-row:last-child { border-bottom: none; }
 
 .clock-row-label {
-  width: 80px;
+  width: 96px;
   flex-shrink: 0;
   font-family: var(--mono);
   font-size: 0.75rem;
@@ -272,3 +374,27 @@ footer {
 footer a { color: var(--ink); }
 
 a { color: var(--accent-danger); }
+
+/* --- Mobile --- */
+@media (max-width: 720px) {
+  .wrap { padding: 1rem 0.75rem 3rem; }
+
+  header.masthead h1 { font-size: 1.45rem; }
+
+  .map-flex { flex-direction: column; }
+  .map-flex #map { height: 400px; }
+  #insights-card {
+    flex: 1 1 auto;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  /* The slope chart renders at a fixed >=700px width so labels stay
+     readable; on a phone that means sideways scrolling rather than an
+     unreadable squashed chart. */
+  #slope-chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .clock-cell { height: 36px; }
+  .clock-cell-tick { font-size: 0.5rem; }
+  .clock-row-label { width: 74px; font-size: 0.65rem; }
+}

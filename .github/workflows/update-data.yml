@@ -24,8 +24,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
+      - name: Run formula test suite
+        run: python3 -m pytest tests/ -q
+
       - name: Fetch latest forecast and compute heat metrics
         run: python3 scripts/fetch_forecast.py
+
+      - name: Validate fetched data before committing
+        run: python3 scripts/validate_latest.py
 
       - name: Commit updated data if it changed
         run: |

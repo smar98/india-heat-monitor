@@ -17,7 +17,7 @@ latitude/longitude lists.
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -30,6 +30,16 @@ OUTPUT_PATH = os.path.join(HERE, "..", "heat", "data", "latest.json")
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 HOURLY_VARS = "temperature_2m,relative_humidity_2m,shortwave_radiation,wind_speed_10m,surface_pressure"
 FORECAST_DAYS = 2  # today + tomorrow, enough for the workday-clock view
+
+# India Standard Time is a fixed UTC+5:30 offset with no daylight saving.
+# Requesting timezone=Asia/Kolkata from Open-Meteo gives full, gap-free IST
+# calendar days (00:00-23:00 IST for each of the 2 requested days) instead
+# of UTC calendar days -- which matters because a prior version of this
+# pipeline requested timezone=UTC, so hour 0 of the array was midnight UTC
+# of the day the script happened to run, not "now" or even "today in IST."
+# That meant the frontend's "current" value and "today" row could be up to
+# ~12 hours stale relative to the actual moment a user loaded the page.
+IST_OFFSET = timedelta(hours=5, minutes=30)
 
 
 def load_cities():
@@ -46,7 +56,7 @@ def fetch_forecast_batch(cities):
         "longitude": ",".join(str(c["lon"]) for c in cities),
         "hourly": HOURLY_VARS,
         "forecast_days": FORECAST_DAYS,
-        "timezone": "UTC",  # keep raw data in UTC; convert to IST for display in the frontend
+        "timezone": "Asia/Kolkata",  # gap-free IST calendar days; see IST_OFFSET note above
         "wind_speed_unit": "ms",
     }
     resp = requests.get(FORECAST_URL, params=params, timeout=60)
@@ -75,7 +85,8 @@ def build_city_record(city, forecast):
 
     hourly_out = []
     for i, t in enumerate(times):
-        dt_utc = datetime.fromisoformat(t)  # naive, but values are UTC per our request
+        dt_ist = datetime.fromisoformat(t)  # naive, represents IST wall-clock time (see IST_OFFSET note)
+        dt_utc = dt_ist - IST_OFFSET  # true UTC instant, needed for the WBGT solar-position calc
 
         temp_c = temps[i]
         rh_pct = rhs[i]
@@ -97,7 +108,8 @@ def build_city_record(city, forecast):
         )
 
         hourly_out.append({
-            "time_utc": t,
+            "time_ist": t,
+            "time_utc": dt_utc.isoformat(timespec="minutes"),
             "temp_c": temp_c,
             "rh_pct": rh_pct,
             "solar_wm2": solar_wm2,
@@ -106,6 +118,13 @@ def build_city_record(city, forecast):
             "wet_bulb_c": round(tw, 2),
             "wbgt_c": round(wbgt["Twbg"], 2) if wbgt["status"] == 0 else None,
             "wbgt_status": wbgt["status"],
+            # Components behind the final WBGT number, so the UI can explain
+            # *why* a city's WBGT is high (e.g. high solar + low wind vs. a
+            # merely-hot dry-bulb reading) rather than just stating the value.
+            "tglobe_c": round(wbgt["Tg"], 2) if wbgt["status"] == 0 else None,
+            "tnwb_c": round(wbgt["Tnwb"], 2) if wbgt["status"] == 0 else None,
+            "tpsy_c": round(wbgt["Tpsy"], 2) if wbgt["status"] == 0 else None,
+            "est_wind_speed_ms": round(wbgt["est_speed"], 2) if wbgt["status"] == 0 else None,
         })
 
     return {

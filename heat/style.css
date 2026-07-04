@@ -1,0 +1,181 @@
+/* India Humid Heat Monitor -- live policy memo, not startup shiny. */
+
+:root {
+  --paper: #f4f1ea;
+  --ink: #1c1c1a;
+  --ink-soft: #55534c;
+  --rule: #c9c4b6;
+  --accent-danger: #b3401f;
+  --accent-danger-soft: #e8c9ba;
+  --accent-neutral: #4a5a63;
+  --mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+  --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.45;
+}
+
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+}
+
+header.masthead {
+  border-bottom: 3px solid var(--ink);
+  padding-bottom: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+header.masthead .kicker {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-danger);
+}
+
+header.masthead h1 {
+  font-size: 1.9rem;
+  margin: 0.15rem 0 0.35rem;
+  font-weight: 600;
+}
+
+header.masthead p.dek {
+  margin: 0;
+  color: var(--ink-soft);
+  max-width: 62ch;
+  font-size: 0.97rem;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-top: 0.7rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+section {
+  margin: 2rem 0;
+}
+
+section > h2 {
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+section > p.section-note {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  max-width: 70ch;
+  margin: 0.4rem 0 1rem;
+}
+
+.layer-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.layer-controls button {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.layer-controls button.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+#map {
+  width: 100%;
+  height: 560px;
+  border: 1px solid var(--ink);
+  background: #e4e0d4;
+}
+
+.legend {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.legend .swatch {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.3);
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 2px;
+  font-family: var(--serif);
+}
+
+.popup-city { font-weight: 700; font-size: 1rem; margin-bottom: 0.2rem; }
+.popup-state { color: var(--ink-soft); font-size: 0.8rem; margin-bottom: 0.5rem; }
+.popup-row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.85rem; }
+.popup-row .label { color: var(--ink-soft); }
+.popup-row .value { font-family: var(--mono); }
+.popup-climb {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  background: var(--accent-danger-soft);
+  border-left: 3px solid var(--accent-danger);
+  font-size: 0.8rem;
+}
+
+#slope-chart {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.caveat {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  border-left: 3px solid var(--rule);
+  padding-left: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+footer {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+footer a { color: var(--ink); }
+
+a { color: var(--accent-danger); }

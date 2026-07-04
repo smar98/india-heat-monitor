@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India Humid Heat Monitor</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Live &middot; updates every 6 hours</div>
+    <h1>India Humid Heat Monitor</h1>
+    <p class="dek">
+      Public heat communication in India runs mostly on dry-bulb air
+      temperature. This dashboard shows which cities look less dangerous on
+      that ordinary ranking but become high-risk once humidity, radiant
+      heat, and wind are accounted for.
+    </p>
+    <div class="meta-row">
+      <span>Data updated: <span id="data-updated">loading&hellip;</span></span>
+      <span><a href="methods.html">Methods &amp; sources</a></span>
+      <span><a href="https://github.com/smar98/india-heat-monitor">Source code</a></span>
+    </div>
+  </header>
+
+  <section id="map-section">
+    <h2>The map</h2>
+    <p class="section-note">
+      Default view: the misranking delta. Toggle to see current wet-bulb
+      temperature or today's anomaly against the 1991&ndash;2020 normal for
+      this date.
+    </p>
+    <div class="layer-controls">
+      <button data-layer="misrank" class="active">Misranking delta</button>
+      <button data-layer="wetbulb">Current wet-bulb</button>
+      <button data-layer="anomaly">Anomaly vs. normal</button>
+    </div>
+    <div id="map"></div>
+    <p class="legend" id="layer-caption"></p>
+    <p class="caveat">
+      ERA5/Open-Meteo data is on a ~25km grid &mdash; a street-level reading
+      can differ from the value shown here. See the methods page for full
+      caveats.
+    </p>
+  </section>
+
+  <section id="slope-section">
+    <h2>Rank-shift: dry-bulb vs. humid-heat</h2>
+    <p class="section-note">
+      Each line is one city. Left: rank by today's peak dry-bulb
+      temperature. Right: rank by today's peak estimated WBGT. Highlighted
+      lines are the ten biggest climbers &mdash; cities that look
+      unremarkable on ordinary temperature but rank far more dangerous once
+      humidity and radiant heat are counted.
+    </p>
+    <div id="slope-chart"></div>
+  </section>
+
+  <section id="workday-clock-section">
+    <h2>Workday clock</h2>
+    <p class="section-note">
+      Hourly WBGT risk bands, including evening and night hours &mdash;
+      coming next. Humid heat often stays risky well after sunset as
+      relative humidity rises, which challenges "avoid only the afternoon"
+      guidance.
+    </p>
+  </section>
+
+  <footer>
+    <p>
+      Estimated WBGT and wet-bulb temperature are model outputs from
+      weather-station-grade data (Open-Meteo), not physical measurements.
+      Language on this site describes "lower-risk outdoor work windows
+      under estimated WBGT assumptions" &mdash; never "safe hours." Full
+      methodology, validity ranges, and an AI-transparency note are on the
+      <a href="methods.html">methods page</a>.
+    </p>
+  </footer>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@2"></script>
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+<script src="js/slope-chart.js"></script>
+</body>
+</html>

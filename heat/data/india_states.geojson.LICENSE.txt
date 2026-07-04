@@ -1,0 +1,11 @@
+heat/data/india_states.geojson is derived from:
+
+  DataMeet India community, "maps" repository
+  https://github.com/datameet/maps
+  File: docs/data/geojson/states.geojson
+  License: MIT (see https://github.com/datameet/maps/blob/master/LICENSE)
+
+Modification: simplified from ~15.7MB to ~140KB using mapshaper
+(-simplify 1.5% -clean, coordinate precision truncated to 0.001 degrees,
+~100m) for faster loading in a browser-side map. Boundary shapes and
+state/UT properties (ST_NM) are otherwise unmodified.

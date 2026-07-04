@@ -15,10 +15,12 @@
     <div class="kicker">Live &middot; updates every 6 hours</div>
     <h1>India Humid Heat Monitor</h1>
     <p class="dek">
-      Public heat communication in India runs mostly on dry-bulb air
-      temperature. This dashboard shows which cities look less dangerous on
-      that ordinary ranking but become high-risk once humidity, radiant
-      heat, and wind are accounted for.
+      India's heat warnings and news rankings sort cities by air
+      temperature alone. But bodies fail from humidity, sun, and wind too
+      &mdash; so attention, alerts, and outdoor-work decisions can end up
+      pointed at the wrong cities. This dashboard shows, live, which
+      cities today's temperature ranking understates &mdash; and by how
+      much.
     </p>
     <div class="meta-row">
       <span>Data updated: <span id="data-updated">loading&hellip;</span></span>
@@ -49,6 +51,16 @@
         today.
       </p>
       <p>
+        <strong>Why WBGT, if India doesn't use it officially?</strong>
+        WBGT is the internationally standard occupational heat-stress
+        metric (ISO 7243), used by militaries, sports bodies, and
+        workplace-safety regulators worldwide, and Indian researchers have
+        applied it in urban and occupational heat-stress studies. It isn't
+        part of India's official heat-warning vocabulary yet &mdash; which
+        is part of the point: this dashboard estimates it from public
+        weather data to show what that vocabulary currently leaves out.
+      </p>
+      <p>
         <strong>What to look for.</strong> The map's warm-colored dots and
         the chart's highlighted lines are today's climbers. The "biggest
         climbers" card explains <em>why</em> each one climbed (humidity,
@@ -65,6 +77,25 @@
         Full formulas, sources, and caveats on the
         <a href="methods.html">methods page</a>.
       </p>
+    </div>
+  </details>
+
+  <details class="explainer glossary">
+    <summary>Glossary &mdash; the five terms this page uses</summary>
+    <div class="explainer-body">
+      <dl class="glossary-list">
+        <dt>Dry-bulb temperature</dt>
+        <dd>The ordinary air temperature a regular thermometer reads &mdash; the number in weather reports and heat advisories.</dd>
+        <dt>Wet-bulb temperature</dt>
+        <dd>How hot it is once humidity is counted &mdash; a measure of how well sweating can still cool you. Always at or below the dry-bulb reading; the closer the two, the harder your body has to work.</dd>
+        <dt>Estimated WBGT</dt>
+        <dd>Wet Bulb Globe Temperature: the standard measure of heat stress for people working outdoors, combining heat, humidity, direct sun, and wind. "Estimated" because it's computed from weather data here, not read off a physical instrument.</dd>
+        <dt>Misranking delta</dt>
+        <dd>How many places a city moves between the ordinary temperature ranking and the WBGT ranking today. &#9650;12 means it ranks 12 places more dangerous once humidity, sun, and wind are counted.</dd>
+        <dt>1991&ndash;2020 normal</dt>
+        <dd>What's typical for this exact calendar date in that city, averaged over 30 years &mdash; so "hot for July in Kolkata" means hotter than Kolkata's own usual July, not hotter than some all-India average.</dd>
+      </dl>
+      <p class="insights-note" style="margin-top:0.5rem;">Scientific definitions, formulas, and error bounds live on the <a href="methods.html">methods page</a>.</p>
     </div>
   </details>
 
@@ -99,7 +130,8 @@
       temperature. Right: rank by today's peak estimated WBGT. Highlighted
       lines are the ten biggest climbers &mdash; cities that look
       unremarkable on ordinary temperature but rank far more dangerous once
-      humidity and radiant heat are counted.
+      humidity and radiant heat are counted. Hover over any dot or city
+      name for the actual temperatures behind its two ranks.
     </p>
     <div id="slope-chart"></div>
   </section>

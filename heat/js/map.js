@@ -80,12 +80,26 @@ async function initMap() {
 
   const map = L.map("map", { scrollWheelZoom: true }).setView([22.5, 80], 5);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 10,
-    minZoom: 4,
-  }).addTo(map);
+  // Esri Light Gray Canvas instead of default OSM tiles: labels are in
+  // English everywhere (OSM's default style labels each country in its own
+  // language -- user-reported), and the muted canvas fits the policy-memo
+  // register better than a full road map.
+  L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    {
+      attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+      maxZoom: 10,
+      minZoom: 4,
+    }
+  ).addTo(map);
+  // Place-name labels as a second tile layer, added after the base so it
+  // draws above it -- but left in the default tile pane so labels stay
+  // *below* the city circle markers and state boundaries (vectors render
+  // in a higher pane).
+  L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+    { maxZoom: 10, minZoom: 4 }
+  ).addTo(map);
 
   fetch("data/india_states.geojson")
     .then((r) => r.json())

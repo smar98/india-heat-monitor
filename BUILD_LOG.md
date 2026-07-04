@@ -335,6 +335,55 @@ https://smar98.github.io/india-heat-monitor/heat/
 
 ---
 
-## Step 6 — Methods page (up next)
+## Step 6 — Methods page (2026-07-04)
 
-*(being written as this step is built)*
+**Built:** `heat/methods.html` — a public-facing writeup of everything
+already verified while building the scientific core: the Stull wet-bulb
+formula with its validity range and error bounds, the Liljegren WBGT
+method and how the port was verified against the compiled original C
+code, the NIOSH RAL/REL formula (and, explicitly, why an earlier flat
+ISO-7243-style band scale was dropped — the real ACGIH/ISO 7243 tables
+are paywalled and workload-dependent, so publishing invented numbers
+under a borrowed standard's name would have been dishonest), full data
+source citations with licenses, the misranking-delta definition, and an
+AI-transparency note describing how this project was built and verified.
+
+Nothing new to verify here beyond what step 2's work already established
+— this step was writing up existing, already-checked facts for a public
+reader rather than the build log's internal audience, so no new claims
+needed sourcing from scratch.
+
+**Committed:** `89210af` — pushed to `main`, confirmed live at
+https://smar98.github.io/india-heat-monitor/heat/methods.html (returns
+HTTP 200; checked directly against the public URL, not just that Pages
+reported success, per this project's habit of never trusting a green
+checkmark alone).
+
+---
+
+## Where things stand after steps 1–6
+
+All four MVP views from the original plan are built and live:
+1. **The map** — interactive Leaflet map, misranking-delta default layer,
+   toggles for current wet-bulb and anomaly-vs-normal.
+2. **Rank-shift chart** — dry-bulb rank vs. WBGT rank, climbers
+   highlighted.
+3. **Workday clock** — hourly WBGT risk bands per city, including night
+   hours, defaulting to today's biggest climber.
+4. **Methods page** — full methodology, sources, caveats, AI-transparency
+   note.
+
+Plus the data pipeline (6-hourly live updates via GitHub Actions,
+1991–2020 historical baseline) and a verified scientific core underneath
+all of it.
+
+**Not yet built** (from the original plan, deferred/remaining):
+- The root landing page (repo currently has no portfolio homepage — the
+  dashboard only exists under `/heat/`, not linked from anywhere at the
+  repo root yet).
+- Phase 2 ideas explicitly deferred by the original brief: outdoor-
+  workforce exposure weighting from Census 2011 economic tables, and a
+  historical trend view (dangerous-humid-heat-hours per year since 1940).
+- General polish: no live testing yet of edge cases (a city with a WBGT
+  solver non-convergence, mobile layout at very small widths beyond what
+  the user already checked, dark mode, print/share behavior).

@@ -377,6 +377,93 @@ Plus the data pipeline (6-hourly live updates via GitHub Actions,
 1991–2020 historical baseline) and a verified scientific core underneath
 all of it.
 
+---
+
+## Step 7 — External review response: time semantics, validation gate, so-what layer (2026-07-04)
+
+The user ran the live dashboard past an external AI reviewer (Codex) and
+added their own observations. The review found one genuine launch blocker
+and several legitimate improvements. What changed:
+
+**The time-window bug (real, and worth understanding).** The pipeline
+requested `timezone=UTC` from Open-Meteo, so hour 0 of each city's array
+was midnight UTC of the fetch day — but the frontend treated hour 0 as
+"now" and the first 24 entries as "today." Result: "current wet-bulb" was
+actually a hours-old (up to ~12h) forecast hour, and the workday clock's
+"Today" row silently ran 05:30 IST today through 04:30 IST tomorrow.
+Fix, in two halves:
+- Pipeline (`fetch_forecast.py`): requests `timezone=Asia/Kolkata`, so
+  each city gets gap-free IST calendar days; stores both `time_ist` (as
+  labeled by Open-Meteo) and `time_utc` (derived, for the WBGT solar-
+  position calculation which needs true UTC).
+- Frontend (`data.js`, `workday-clock.js`): "current" = the hour whose UTC
+  instant is nearest the real current moment; "today" = hours whose IST
+  date equals the actual current IST date; clock rows labeled with the
+  real date ("Today 07/04") so stale data reads as stale, never mislabeled.
+- Also fixed the normals join to use the IST month-day (was UTC's). The
+  normals themselves aggregate ERA5 hours into UTC calendar days (their
+  one-time build requested timezone=UTC); comparing an IST-day peak to a
+  UTC-day-aggregated normal offsets the 24h aggregation window by 5.5h —
+  for a 30-year climatological mean this shifts values by well under
+  0.1°C, so it's accepted and documented rather than re-fetching 50
+  cities × 30 years for cosmetic exactness.
+
+**Data robustness gate (the honest answer to "are we 100% sure the data
+is robust?" was no).** New `scripts/validate_latest.py` runs in GitHub
+Actions after every fetch and before every commit: freshness (<12h),
+all 50 cities present exactly once, ≥24 contiguous hourly timestamps per
+city, physical range checks on every value, wet-bulb ≤ dry-bulb + Stull's
+documented +0.65 error bound, `wbgt_c` null exactly when the solver
+failed, solver failure rate <5%, and — the strongest check — the stored
+WBGT must recombine from its own stored components (0.7·Tnwb + 0.2·Tg +
+0.1·Tair) to within rounding. The workflow also now runs the 20-test
+formula suite before fetching. A failed check fails the workflow and the
+previous valid data stays live. What this still can't prove: agreement
+with physically measured WBGT on the ground (no public measured-WBGT
+network exists to check against), and ERA5 grid-vs-street differences —
+both stated on the methods page rather than papered over.
+
+**Thesis kept direction-neutral (review caught an overclaim risk).**
+Today's actual climbers were Chandigarh/Surat/Ludhiana — inland and
+northern — while Chennai and Madurai *fell*. The original brief's mental
+model ("the belt of underrated coastal/eastern cities") is not what the
+data shows every day, because WBGT also weighs sun and wind. Methods page
+and the new explainer now say the defensible version: dry-bulb rankings
+misorder risk, and which cities they misorder changes with the weather —
+the day-to-day instability is the finding, and a live dashboard is the
+right vehicle for it precisely because a fixed infographic can't show it.
+
+**Stull elevation caveat fixed.** Methods page claimed all ~50 cities are
+lowland/coastal — false (Srinagar ~1,600m, Bengaluru ~900m). Now names
+the elevated cities, notes the wet-bulb overestimate direction at lower
+pressure, and clarifies WBGT is unaffected (Liljegren takes real surface
+pressure as an input; Stull does not).
+
+**So-what layer (user's request).** Collapsible "Why this matters"
+explainer at the top; a movers card beside the map — top 5 climbers with
+dry→WBGT ranks, peak WBGT, and the *physical reason* (high humidity /
+strong sun / little wind, read from the newly stored per-hour WBGT
+components at each city's peak hour), plus top 3 fallers so both
+directions stay visible; every slope-chart city now carries a right-side
+label with its movement (▲/▼ + places moved).
+
+**Smaller fixes:** footer wording ("standard meteorological variables from
+gridded forecast/reanalysis data," not "weather-station-grade"); mobile
+layout (map+card stack, slope chart scrolls sideways instead of
+squashing, tighter clock cells); attribution line ("Built and edited by
+Sanchit Mardia" + GitHub + issues link — name+link is the norm; a bare
+mailto invites scraping, so corrections route through GitHub issues).
+
+**Verification:** pytest (20/20), validate_latest.py green against live
+data, node --check on all five JS files, both HTML pages parse, and the
+updated ranking/current-hour/IST logic exercised end-to-end in Node
+against the real served data files (confirmed: "current" picks the hour
+nearest now; today-windows contain only today's IST date; all 50 records
+join a normal; Surat tops today's climbers on 87% RH + 0.13 m/s wind, and
+the reasons function reads exactly that off the stored components).
+
+**Committed:** `b16b874` — pushed to `main`.
+
 **Not yet built** (from the original plan, deferred/remaining):
 - The root landing page (repo currently has no portfolio homepage — the
   dashboard only exists under `/heat/`, not linked from anywhere at the

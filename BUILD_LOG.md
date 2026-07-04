@@ -168,5 +168,40 @@ running it for all 50 cities: July 4 normal mean temp came out to 30.5°C
 and January 15 to 24.1°C, both consistent with Chennai's known climate;
 Feb 29 correctly averaged over only 8 (leap) years out of 30.
 
-*(GitHub Actions workflow and final commit for this step: below, once the
-full 50-city normals run finishes.)*
+**GitHub Actions.** `.github/workflows/update-data.yml` runs
+`fetch_forecast.py` on a `cron: "0 */6 * * *"` schedule plus a manual
+`workflow_dispatch` trigger, with `permissions: contents: write` so the
+job can commit the refreshed `latest.json` back to the repo. Didn't just
+trust a green checkmark: triggered it manually via `gh workflow run`,
+watched it run to completion (`gh run watch`), then confirmed with
+`git fetch` that a real bot commit (`af8b275`) actually landed on
+`origin/main` — not just that the job reported success.
+
+**Rate-limit bug, found and fixed.** The first full 50-city normals run
+crashed at city 7/50 with an HTTP 429 from Open-Meteo's Archive API —
+their free tier throttles bursts of requests even though the daily quota
+(10k calls/day) is generous. The original script also only wrote its
+output at the very end, so the crash threw away all 6 already-fetched
+cities. Fixed both problems: added retry with exponential backoff
+(respecting `Retry-After` when present) to `fetch_city_history()`, and
+changed `main()` to save `normals.json` after every single city and skip
+cities already present on a re-run, so a future crash never loses
+progress again. Re-ran end-to-end: all 50 cities completed (some needed
+up to 4 retries as rate-limit pressure grew through the run), producing
+366 calendar-date entries per city.
+
+**Result, spot-checked against real data:** Kochi's normal dry-bulb
+temperature for July 4 (25.6°C) looks unremarkable next to Jaipur's
+(30.7°C) — but Kochi's wet-bulb sits only 1.3°C below its dry-bulb
+(nearly saturated air), while Jaipur's wet-bulb is 6°C below its dry-bulb
+(a much drier heat). This is the misranking the dashboard exists to
+surface, showing up in the very first real data pulled for it.
+
+**Committed:** `2dcae5c` (city list, fetch script, workflow),
+`bc068cb` (50-city normals baseline) — both pushed to `main`.
+
+---
+
+## Step 4 — Map + rank-shift chart (up next)
+
+*(being written as this step is built)*

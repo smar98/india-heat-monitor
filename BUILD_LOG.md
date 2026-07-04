@@ -281,6 +281,60 @@ reported a successful build).
 
 ---
 
-## Step 5 — Workday clock (up next)
+## Step 5 — Workday clock (2026-07-04)
+
+**Live bug report from the user, fixed first.** Before starting step 5,
+the user opened the step-4 dashboard on their phone and reported "Could
+not load chart data: Plot is not defined." Root-caused it directly (not
+guessed): `@observablehq/plot@2` doesn't exist as a version — Plot is
+still pre-1.0 (latest is 0.6.17) — so the CDN URL 404'd. Also found a
+second, not-yet-triggered bug while fixing the first: the correct package
+path (`dist/plot.umd.min.js`) depends on a global `d3` that was never
+loaded. Fixed both, then actually verified the fix (not just "should
+work") by loading both corrected CDN URLs in a sandboxed Node `vm`
+context in the exact script order the page uses, and confirming
+`typeof Plot.plot === "function"` before pushing. User confirmed it looks
+okay after the fix and said to keep going.
+
+**Built:** `heat/js/workday-clock.js` — a per-city hourly grid (today +
+tomorrow, in true IST wall-clock time) colored by NIOSH RAL/REL risk tier,
+with night hours (19:00–06:00 IST) visually outlined so the "heat doesn't
+end at sunset" claim is visible rather than asserted. Defaults to today's
+biggest misranking climber (ties this view back to the map/chart without
+extra clicking), with a dropdown covering all 50 cities.
+
+**Refactor while building it:** centralized the NIOSH RAL/REL constants
+and `wbgtRiskLabel()` from `map.js` into `data.js`, since the clock needed
+the same numbers — avoided a third copy of the same formula rather than
+letting it drift.
+
+**Two bugs found and fixed via actually running the code, not review:**
+1. `map.js`, `slope-chart.js`, and the new `workday-clock.js` each call
+   `loadAllData()` independently — without a cache, that's three separate
+   fetches of `normals.json` (~3.7MB) per page load, real wasted data on
+   the phone the user is checking this on. Added a shared in-flight/
+   completed-request cache inside `loadAllData()`.
+2. `buildHourlySeriesForCity()`'s IST time conversion computed the correct
+   `Date` object but then formatted its label as `HH:00`, silently
+   dropping the minutes. Since IST is UTC+5:30 and Open-Meteo's hourly data
+   lands exactly on the UTC hour, every converted timestamp is actually
+   `HH:30`, never `HH:00` — every single hour label on this view would
+   have been wrong by 30 minutes. Caught this by running the actual
+   conversion in Node against the live local server and printing real
+   values (`05:30`, not the `05:00` the buggy code produced), not by
+   reading the code and assuming it was right.
+
+**Result, from real data:** Chandigarh — today's biggest misranking
+climber — shows elevated WBGT risk in all 22 of its forecasted night
+hours in this run. That's the workday clock's reason for existing, showing
+up immediately in real output.
+
+**Committed:** `acad7d1` (Plot/D3 CDN fix), `fb3603e` (workday clock) —
+both pushed to `main` and live at
+https://smar98.github.io/india-heat-monitor/heat/
+
+---
+
+## Step 6 — Methods page (up next)
 
 *(being written as this step is built)*

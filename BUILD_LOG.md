@@ -202,6 +202,85 @@ surface, showing up in the very first real data pulled for it.
 
 ---
 
-## Step 4 — Map + rank-shift chart (up next)
+## Step 4 — Map + rank-shift chart (2026-07-04)
+
+**Boundary data licensing check.** The plan called for a vendored India
+state-boundary GeoJSON. The obvious candidate (`udit-001/india-maps-data`)
+turned out to have **no license at all** on GitHub — meaning default
+all-rights-reserved, unsafe to vendor into a public repo regardless of it
+being publicly viewable. `geohacker/india` (MIT) had a license but its
+state file was 23MB, too large for a browser to load. Found
+`datameet/maps` (MIT, DataMeet India community) with a 15.7MB
+`states.geojson` — real state boundaries, clear license — and simplified
+it myself with `mapshaper` (`-simplify 1.5% -clean`, coordinate precision
+truncated to ~100m) down to 140KB, keeping all 36 states/UTs recognizable.
+Wrote `heat/data/india_states.geojson.LICENSE.txt` documenting the exact
+source, license, and what was modified, per MIT's attribution requirement.
+
+**Built:**
+- `heat/js/data.js` — shared ranking logic used by both the map and the
+  chart, so they can't disagree. Defines the dashboard's central claim in
+  code: "dry-bulb rank" = cities ranked by today's peak dry-bulb temp;
+  "humid-heat rank" = same cities ranked by today's peak estimated WBGT;
+  "misranking delta" = dry-bulb rank minus humid-heat rank. A big positive
+  delta is a "climber" -- a city that looks unremarkable on ordinary
+  temperature but ranks near the top of humid-heat danger.
+- `heat/js/map.js` — Leaflet map, OpenStreetMap tiles, three toggleable
+  layers (misranking delta / current wet-bulb / anomaly vs. normal).
+  Popups show a NIOSH RAL/REL-based risk line using the required language
+  ("above NIOSH's limit for continuous moderate work" — never "safe
+  hours"), with the same NIOSH formula from `scripts/wbgt.py` duplicated
+  as a named JS constant (documented why it's duplicated rather than
+  shared, since this is a static site with no shared backend).
+- `heat/js/slope-chart.js` — Observable Plot slope chart, dry-bulb rank
+  (left) vs. WBGT rank (right), with only the top 10 climbers highlighted
+  in color so the story isn't buried in 50 crossing gray lines.
+- `heat/index.html` / `heat/style.css` — dashboard shell in a "live policy
+  memo" register (serif headline type, monospace data labels, muted paper
+  background, no startup-bright colors), with the WBGT/wet-bulb language
+  discipline stated explicitly in the footer.
+
+**Verification, given a real environment limitation.** The Claude Code
+preview tool's sandbox could not access files under this Desktop folder at
+all (failed even to `open()` a file there, independent of the code) — a
+macOS-level permission wall on that specific tool, not a bug in the site.
+Worked around it for everything that doesn't require an actual rendered
+DOM:
+- Wrote `scripts/serve_static.py` (a minimal server avoiding Python's
+  stdlib `http.server` CLI, whose argparse default calls `os.getcwd()`
+  unconditionally — which was itself failing in the sandboxed preview
+  process) and ran it via the plain shell tool instead, which faced no
+  such restriction.
+- Confirmed via `curl` that every asset the page references (`index.html`,
+  `style.css`, all three JS files, all four data files) returns HTTP 200.
+- Syntax-checked all three JS files with `node --check`.
+- **Actually ran the ranking logic**: loaded `heat/js/data.js` in Node
+  (Node 26 has native `fetch`) against the real, live data files served
+  from the local server, and confirmed `buildCityMetrics`/`computeRanks`
+  process all 50 cities with unique ranks and no crashes. Real output:
+  Chandigarh, Ludhiana, and a few other North/West cities are today's
+  biggest climbers, while several Tamil Nadu cities (Madurai,
+  Tiruchirappalli, Chennai) currently rank *lower* on WBGT than dry-bulb —
+  a live snapshot of an unusual dry spell there, not a scripted "coastal
+  cities always win" result. That the ranking flips day to day is the
+  point of building this live rather than as a static infographic.
+- Extracted and unit-tested the pure color/label helper functions from
+  `map.js` in isolation (`vm.runInThisContext`, since `const`/`let` inside
+  a plain `eval()` don't escape to the outer scope the way `var` would) —
+  confirmed the JS-side NIOSH RAL/REL constants (24.05°C / 27.46°C) match
+  the Python-side values in `scripts/wbgt.py` exactly.
+- **What's not verified:** actual browser rendering (does the Leaflet map
+  actually draw markers in the right place, do hover/click interactions
+  work, does the layer toggle visually update, does the chart render
+  without layout glitches). This needs a real browser — the dashboard is
+  live at https://smar98.github.io/india-heat-monitor/heat/ for that check.
+
+**Committed:** `10fee3c` — pushed to `main`, live on GitHub Pages
+(confirmed via `curl` against the actual public URL, not just that Pages
+reported a successful build).
+
+---
+
+## Step 5 — Workday clock (up next)
 
 *(being written as this step is built)*

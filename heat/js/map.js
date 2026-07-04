@@ -54,24 +54,9 @@ function colorForSequential(value, min, max) {
   return `rgb(${r},${g},${b})`;
 }
 
-// NIOSH RAL (unacclimatized) / REL (acclimatized) WBGT thresholds for
-// "moderate work" (300 kcal/h ~= 349W), evaluated from NIOSH DHHS 2016-106's
-// own stated equations -- see scripts/wbgt.py for the source and derivation.
-// Duplicated here (not computed dynamically) because this is a browser-side
-// script with no access to the Python module; kept as named constants, not
-// magic numbers, so the two copies are easy to compare if either changes.
-const NIOSH_RAL_MODERATE_C = 59.9 - 14.1 * Math.log10(349);
-const NIOSH_REL_MODERATE_C = 56.7 - 11.5 * Math.log10(349);
-
-function wbgtRiskLabel(wbgtC) {
-  if (wbgtC >= NIOSH_REL_MODERATE_C) {
-    return "above NIOSH's own limit (REL) for continuous moderate work, even heat-acclimatized";
-  }
-  if (wbgtC >= NIOSH_RAL_MODERATE_C) {
-    return "above NIOSH's limit (RAL) for unacclimatized workers at moderate work";
-  }
-  return "below NIOSH's moderate-work alert limits";
-}
+// NIOSH_RAL_MODERATE_C / NIOSH_REL_MODERATE_C / wbgtRiskLabel() now live in
+// data.js (shared with workday-clock.js) -- data.js is loaded before this
+// file in index.html.
 
 function colorForAnomaly(anomaly, maxAbs) {
   const t = Math.max(-1, Math.min(1, anomaly / (maxAbs || 1)));

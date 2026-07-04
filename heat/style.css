@@ -167,6 +167,99 @@ section > p.section-note {
   margin: 0.75rem 0;
 }
 
+.clock-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+.clock-controls select {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+#clock-default-note {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.clock-grid {
+  border: 1px solid var(--ink);
+  background: #fff;
+}
+
+.clock-row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--rule);
+}
+
+.clock-row:last-child { border-bottom: none; }
+
+.clock-row-label {
+  width: 80px;
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  padding-left: 0.5rem;
+  color: var(--ink-soft);
+  border-right: 1px solid var(--rule);
+}
+
+.clock-cells {
+  display: flex;
+  flex: 1;
+}
+
+.clock-cell {
+  flex: 1;
+  height: 46px;
+  position: relative;
+  border-right: 1px solid rgba(255,255,255,0.5);
+}
+
+.clock-cell-night {
+  box-shadow: inset 0 0 0 2px rgba(28,28,26,0.35);
+}
+
+.clock-cell-tick {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  color: rgba(28,28,26,0.55);
+}
+
+.clock-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  align-items: center;
+}
+
+.clock-legend .swatch {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-right: 0.3rem;
+  vertical-align: middle;
+  border: 1px solid rgba(0,0,0,0.3);
+}
+
 footer {
   margin-top: 2.5rem;
   padding-top: 1rem;

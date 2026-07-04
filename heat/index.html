@@ -63,10 +63,29 @@
   <section id="workday-clock-section">
     <h2>Workday clock</h2>
     <p class="section-note">
-      Hourly WBGT risk bands, including evening and night hours &mdash;
-      coming next. Humid heat often stays risky well after sunset as
-      relative humidity rises, which challenges "avoid only the afternoon"
-      guidance.
+      Hourly estimated-WBGT risk bands, today and tomorrow, in IST. Night
+      hours (19:00&ndash;06:00 IST) are outlined &mdash; humid heat often
+      stays in a higher risk band well after sunset as relative humidity
+      rises, which "avoid only the afternoon" guidance misses.
+    </p>
+    <div class="clock-controls">
+      <label for="clock-city-select">City:</label>
+      <select id="clock-city-select"></select>
+      <span id="clock-default-note"></span>
+    </div>
+    <div id="workday-clock"></div>
+    <div class="clock-legend">
+      <span><span class="swatch" style="background:#cdd6d9;"></span>Below NIOSH RAL (moderate work)</span>
+      <span><span class="swatch" style="background:#e0a458;"></span>Above RAL, below REL</span>
+      <span><span class="swatch" style="background:#b3401f;"></span>Above REL (acclimatized limit)</span>
+      <span>Outlined cells = night hours (19:00&ndash;06:00 IST)</span>
+    </div>
+    <p class="caveat">
+      These are NIOSH's own reference limits for continuous moderate
+      outdoor work (not this dashboard's invention) &mdash; described here
+      as "lower-risk outdoor work windows under estimated WBGT
+      assumptions," never as "safe hours." See the methods page for the
+      full derivation.
     </p>
   </section>
 
@@ -90,5 +109,6 @@
 <script src="js/data.js"></script>
 <script src="js/map.js"></script>
 <script src="js/slope-chart.js"></script>
+<script src="js/workday-clock.js"></script>
 </body>
 </html>

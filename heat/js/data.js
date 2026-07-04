@@ -25,18 +25,29 @@
 
 const DATA_BASE = "data";
 
-async function loadAllData() {
-  const [citiesResp, latestResp, normalsResp] = await Promise.all([
-    fetch(`${DATA_BASE}/cities.json`),
-    fetch(`${DATA_BASE}/latest.json`),
-    fetch(`${DATA_BASE}/normals.json`),
-  ]);
-  const [cities, latest, normals] = await Promise.all([
-    citiesResp.json(),
-    latestResp.json(),
-    normalsResp.json(),
-  ]);
-  return { cities, latest, normals };
+// map.js, slope-chart.js, and workday-clock.js each call loadAllData() on
+// the same page load -- without caching, that's three separate fetches of
+// normals.json (~3.7MB) alone. Cache the one in-flight/completed request so
+// every caller shares it.
+let _loadAllDataPromise = null;
+
+function loadAllData() {
+  if (!_loadAllDataPromise) {
+    _loadAllDataPromise = (async () => {
+      const [citiesResp, latestResp, normalsResp] = await Promise.all([
+        fetch(`${DATA_BASE}/cities.json`),
+        fetch(`${DATA_BASE}/latest.json`),
+        fetch(`${DATA_BASE}/normals.json`),
+      ]);
+      const [cities, latest, normals] = await Promise.all([
+        citiesResp.json(),
+        latestResp.json(),
+        normalsResp.json(),
+      ]);
+      return { cities, latest, normals };
+    })();
+  }
+  return _loadAllDataPromise;
 }
 
 /** "MM-DD" for a given Date, in UTC (matches how normals.json is keyed). */
@@ -120,4 +131,68 @@ function computeRanks(records) {
     r.misrankDelta = r.dryBulbRank - r.wbgtRank;
   }
   return records;
+}
+
+// ---------------------------------------------------------------------------
+// NIOSH RAL (unacclimatized) / REL (acclimatized) WBGT thresholds for
+// "moderate work" (300 kcal/h ~= 349W), evaluated from NIOSH DHHS 2016-106's
+// own stated equations -- see scripts/wbgt.py for the source and derivation.
+// Duplicated here rather than computed server-side because this is a static
+// site with no shared backend between the Python pipeline and the browser;
+// kept as named constants (not magic numbers) so the two copies are easy to
+// diff if either changes. Shared by map.js and workday-clock.js.
+// ---------------------------------------------------------------------------
+const NIOSH_RAL_MODERATE_C = 59.9 - 14.1 * Math.log10(349);
+const NIOSH_REL_MODERATE_C = 56.7 - 11.5 * Math.log10(349);
+
+function wbgtRiskLabel(wbgtC) {
+  if (wbgtC >= NIOSH_REL_MODERATE_C) {
+    return "above NIOSH's own limit (REL) for continuous moderate work, even heat-acclimatized";
+  }
+  if (wbgtC >= NIOSH_RAL_MODERATE_C) {
+    return "above NIOSH's limit (RAL) for unacclimatized workers at moderate work";
+  }
+  return "below NIOSH's moderate-work alert limits";
+}
+
+/** Coarse risk tier for the workday clock's cell coloring. */
+function wbgtRiskTier(wbgtC) {
+  if (wbgtC >= NIOSH_REL_MODERATE_C) return "above-rel";
+  if (wbgtC >= NIOSH_RAL_MODERATE_C) return "above-ral";
+  return "below-ral";
+}
+
+// IST = UTC+5:30, fixed offset (India does not observe daylight saving time).
+const IST_OFFSET_MINUTES = 5 * 60 + 30;
+
+/**
+ * Builds the full hourly series (today + tomorrow) for one city, converted
+ * to IST wall-clock time for display, with a `isNight` flag (19:00-06:00
+ * IST) -- used by the workday clock to make explicit that humid heat can
+ * stay in a higher risk band well after sunset, which plain "avoid the
+ * afternoon" guidance misses.
+ */
+function buildHourlySeriesForCity(cityId, latest) {
+  const cityLatest = latest.cities.find((c) => c.id === cityId);
+  if (!cityLatest) return [];
+
+  return cityLatest.hourly.map((h) => {
+    const utcDate = new Date(h.time_utc + "Z");
+    const istDate = new Date(utcDate.getTime() + IST_OFFSET_MINUTES * 60 * 1000);
+    const istHour = istDate.getUTCHours();
+    const istMinute = istDate.getUTCMinutes();
+    // Open-Meteo's hourly timestamps are on the UTC hour, and IST is
+    // UTC+5:30, so every converted IST time lands on :30 (or :00, on the
+    // rare exact-hour boundary) -- never assume :00 or the label lies.
+    const isNight = istHour >= 19 || istHour < 6;
+    return {
+      ...h,
+      istDate,
+      istHour,
+      istMinute,
+      istLabel: `${String(istHour).padStart(2, "0")}:${String(istMinute).padStart(2, "0")}`,
+      isNight,
+      riskTier: h.wbgt_status === 0 && h.wbgt_c != null ? wbgtRiskTier(h.wbgt_c) : "unknown",
+    };
+  });
 }

@@ -1,0 +1,402 @@
+[
+  {
+    "id": 1,
+    "name": "Delhi",
+    "state": "Delhi",
+    "lat": 28.6139,
+    "lon": 77.209,
+    "population_2011_census": 16314838
+  },
+  {
+    "id": 2,
+    "name": "Kolkata",
+    "state": "West Bengal",
+    "lat": 22.5726,
+    "lon": 88.3639,
+    "population_2011_census": 14112536
+  },
+  {
+    "id": 3,
+    "name": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.076,
+    "lon": 72.8777,
+    "population_2011_census": 12461724
+  },
+  {
+    "id": 4,
+    "name": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.3849,
+    "lon": 78.4866,
+    "population_2011_census": 8746490
+  },
+  {
+    "id": 5,
+    "name": "Bengaluru",
+    "state": "Karnataka",
+    "lat": 12.9716,
+    "lon": 77.5946,
+    "population_2011_census": 8728906
+  },
+  {
+    "id": 6,
+    "name": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.0827,
+    "lon": 80.2707,
+    "population_2011_census": 8696010
+  },
+  {
+    "id": 7,
+    "name": "Ahmedabad",
+    "state": "Gujarat",
+    "lat": 23.0225,
+    "lon": 72.5714,
+    "population_2011_census": 6577940
+  },
+  {
+    "id": 8,
+    "name": "Surat",
+    "state": "Gujarat",
+    "lat": 21.1702,
+    "lon": 72.8311,
+    "population_2011_census": 4462002
+  },
+  {
+    "id": 9,
+    "name": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.5204,
+    "lon": 73.8567,
+    "population_2011_census": 3115431
+  },
+  {
+    "id": 10,
+    "name": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.9124,
+    "lon": 75.7873,
+    "population_2011_census": 3046163
+  },
+  {
+    "id": 11,
+    "name": "Kanpur",
+    "state": "Uttar Pradesh",
+    "lat": 26.448,
+    "lon": 80.3306,
+    "population_2011_census": 2920067
+  },
+  {
+    "id": 12,
+    "name": "Lucknow",
+    "state": "Uttar Pradesh",
+    "lat": 26.8467,
+    "lon": 80.9462,
+    "population_2011_census": 2901474
+  },
+  {
+    "id": 13,
+    "name": "Nagpur",
+    "state": "Maharashtra",
+    "lat": 21.1458,
+    "lon": 79.0882,
+    "population_2011_census": 2405421
+  },
+  {
+    "id": 14,
+    "name": "Ghaziabad",
+    "state": "Uttar Pradesh",
+    "lat": 28.6692,
+    "lon": 77.4538,
+    "population_2011_census": 2358525
+  },
+  {
+    "id": 15,
+    "name": "Indore",
+    "state": "Madhya Pradesh",
+    "lat": 22.7196,
+    "lon": 75.8577,
+    "population_2011_census": 2167447
+  },
+  {
+    "id": 16,
+    "name": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.0168,
+    "lon": 76.9558,
+    "population_2011_census": 2151466
+  },
+  {
+    "id": 17,
+    "name": "Patna",
+    "state": "Bihar",
+    "lat": 25.5941,
+    "lon": 85.1376,
+    "population_2011_census": 2046652
+  },
+  {
+    "id": 18,
+    "name": "Visakhapatnam",
+    "state": "Andhra Pradesh",
+    "lat": 17.6868,
+    "lon": 83.2185,
+    "population_2011_census": 2035922
+  },
+  {
+    "id": 19,
+    "name": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.2599,
+    "lon": 77.4126,
+    "population_2011_census": 1883381
+  },
+  {
+    "id": 20,
+    "name": "Nashik",
+    "state": "Maharashtra",
+    "lat": 19.9975,
+    "lon": 73.7898,
+    "population_2011_census": 1817359
+  },
+  {
+    "id": 21,
+    "name": "Pimpri-Chinchwad",
+    "state": "Maharashtra",
+    "lat": 18.6235,
+    "lon": 73.8079,
+    "population_2011_census": 1772891
+  },
+  {
+    "id": 22,
+    "name": "Agra",
+    "state": "Uttar Pradesh",
+    "lat": 27.1767,
+    "lon": 78.0081,
+    "population_2011_census": 1746467
+  },
+  {
+    "id": 23,
+    "name": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.3072,
+    "lon": 73.1812,
+    "population_2011_census": 1670806
+  },
+  {
+    "id": 24,
+    "name": "Ludhiana",
+    "state": "Punjab",
+    "lat": 30.901,
+    "lon": 75.8573,
+    "population_2011_census": 1618879
+  },
+  {
+    "id": 25,
+    "name": "Madurai",
+    "state": "Tamil Nadu",
+    "lat": 9.9252,
+    "lon": 78.1198,
+    "population_2011_census": 1462420
+  },
+  {
+    "id": 26,
+    "name": "Varanasi",
+    "state": "Uttar Pradesh",
+    "lat": 25.3176,
+    "lon": 82.9739,
+    "population_2011_census": 1435113
+  },
+  {
+    "id": 27,
+    "name": "Meerut",
+    "state": "Uttar Pradesh",
+    "lat": 28.9845,
+    "lon": 77.7064,
+    "population_2011_census": 1424908
+  },
+  {
+    "id": 28,
+    "name": "Faridabad",
+    "state": "Haryana",
+    "lat": 28.4089,
+    "lon": 77.3178,
+    "population_2011_census": 1404653
+  },
+  {
+    "id": 29,
+    "name": "Jamshedpur",
+    "state": "Jharkhand",
+    "lat": 22.8046,
+    "lon": 86.2029,
+    "population_2011_census": 1337131
+  },
+  {
+    "id": 30,
+    "name": "Rajkot",
+    "state": "Gujarat",
+    "lat": 22.3039,
+    "lon": 70.8022,
+    "population_2011_census": 1286678
+  },
+  {
+    "id": 31,
+    "name": "Jabalpur",
+    "state": "Madhya Pradesh",
+    "lat": 23.1815,
+    "lon": 79.9864,
+    "population_2011_census": 1267564
+  },
+  {
+    "id": 32,
+    "name": "Asansol",
+    "state": "West Bengal",
+    "lat": 23.6739,
+    "lon": 86.9524,
+    "population_2011_census": 1243008
+  },
+  {
+    "id": 33,
+    "name": "Allahabad",
+    "state": "Uttar Pradesh",
+    "lat": 25.4358,
+    "lon": 81.8463,
+    "population_2011_census": 1216719
+  },
+  {
+    "id": 34,
+    "name": "Dhanbad",
+    "state": "Jharkhand",
+    "lat": 23.7957,
+    "lon": 86.4304,
+    "population_2011_census": 1195298
+  },
+  {
+    "id": 35,
+    "name": "Srinagar",
+    "state": "Jammu and Kashmir",
+    "lat": 34.0814,
+    "lon": 74.8076,
+    "population_2011_census": 1192792
+  },
+  {
+    "id": 36,
+    "name": "Aurangabad",
+    "state": "Maharashtra",
+    "lat": 19.8762,
+    "lon": 75.3433,
+    "population_2011_census": 1171330
+  },
+  {
+    "id": 37,
+    "name": "Jodhpur",
+    "state": "Rajasthan",
+    "lat": 26.2389,
+    "lon": 73.0243,
+    "population_2011_census": 1137815
+  },
+  {
+    "id": 38,
+    "name": "Amritsar",
+    "state": "Punjab",
+    "lat": 31.634,
+    "lon": 74.8723,
+    "population_2011_census": 1132761
+  },
+  {
+    "id": 39,
+    "name": "Ranchi",
+    "state": "Jharkhand",
+    "lat": 23.3496,
+    "lon": 85.3345,
+    "population_2011_census": 1126741
+  },
+  {
+    "id": 40,
+    "name": "Gwalior",
+    "state": "Madhya Pradesh",
+    "lat": 26.2183,
+    "lon": 78.1828,
+    "population_2011_census": 1101981
+  },
+  {
+    "id": 41,
+    "name": "Chandigarh",
+    "state": "Chandigarh",
+    "lat": 30.74,
+    "lon": 76.7567,
+    "population_2011_census": 1054686
+  },
+  {
+    "id": 42,
+    "name": "Vijayawada",
+    "state": "Andhra Pradesh",
+    "lat": 16.5062,
+    "lon": 80.648,
+    "population_2011_census": 1048240
+  },
+  {
+    "id": 43,
+    "name": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "lat": 10.7905,
+    "lon": 78.7047,
+    "population_2011_census": 1021717
+  },
+  {
+    "id": 44,
+    "name": "Raipur",
+    "state": "Chhattisgarh",
+    "lat": 21.2514,
+    "lon": 81.6296,
+    "population_2011_census": 1010087
+  },
+  {
+    "id": 45,
+    "name": "Guwahati",
+    "state": "Assam",
+    "lat": 26.1445,
+    "lon": 91.7362,
+    "population_2011_census": 968549
+  },
+  {
+    "id": 46,
+    "name": "Tirupur",
+    "state": "Tamil Nadu",
+    "lat": 11.1085,
+    "lon": 77.3411,
+    "population_2011_census": 962982
+  },
+  {
+    "id": 47,
+    "name": "Thiruvananthapuram",
+    "state": "Kerala",
+    "lat": 8.5241,
+    "lon": 76.9366,
+    "population_2011_census": 957730
+  },
+  {
+    "id": 48,
+    "name": "Bhubaneswar",
+    "state": "Odisha",
+    "lat": 20.2955,
+    "lon": 85.8248,
+    "population_2011_census": 881988
+  },
+  {
+    "id": 49,
+    "name": "Puducherry",
+    "state": "Puducherry",
+    "lat": 11.9139,
+    "lon": 79.8145,
+    "population_2011_census": 654392
+  },
+  {
+    "id": 50,
+    "name": "Kochi",
+    "state": "Kerala",
+    "lat": 9.9312,
+    "lon": 76.2673,
+    "population_2011_census": 612343
+  }
+]

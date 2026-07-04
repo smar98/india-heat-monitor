@@ -1,0 +1,40 @@
+name: Update heat data
+
+on:
+  schedule:
+    # Every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}  # lets us trigger a run manually from the Actions tab
+
+permissions:
+  contents: write  # needed so the workflow can commit the updated data file back
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Fetch latest forecast and compute heat metrics
+        run: python3 scripts/fetch_forecast.py
+
+      - name: Commit updated data if it changed
+        run: |
+          git config user.name "heat-monitor-bot"
+          git config user.email "actions@github.com"
+          git add heat/data/latest.json
+          if git diff --cached --quiet; then
+            echo "No data changes, nothing to commit."
+          else
+            git commit -m "Update heat data: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git push
+          fi

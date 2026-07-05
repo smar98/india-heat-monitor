@@ -350,8 +350,11 @@ section > p.section-note {
   border-right: 1px solid rgba(255,255,255,0.5);
 }
 
-.clock-cell-night {
-  box-shadow: inset 0 0 0 2px rgba(28,28,26,0.35);
+/* The 11am-5pm afternoon-avoidance window: a subtle shaded band behind the
+   cells, so "inside the window" reads as the officially-covered zone and the
+   dark-red cells outside it stand out as the overlooked hours. */
+.clock-cell-window {
+  box-shadow: inset 0 2px 0 rgba(28,28,26,0.45), inset 0 -2px 0 rgba(28,28,26,0.45);
 }
 
 .clock-cell-tick {
@@ -381,6 +384,117 @@ section > p.section-note {
   margin-right: 0.3rem;
   vertical-align: middle;
   border: 1px solid rgba(0,0,0,0.3);
+}
+
+/* --- Headline: the overlooked hours --- */
+.workload-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0 1rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.workload-label { color: var(--ink-soft); margin-right: 0.2rem; }
+
+.workload-btn {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.workload-btn.active { background: var(--ink); color: var(--paper); }
+
+.workload-note {
+  flex-basis: 100%;
+  color: var(--ink-soft);
+  margin-top: 0.2rem;
+}
+
+.workload-note .workload-eg { font-style: italic; }
+
+.headline-flex {
+  display: flex;
+  gap: 1.25rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.overlooked-stat {
+  flex: 1 1 320px;
+  border: 1px solid var(--ink);
+  background: #fbf9f3;
+  padding: 1rem 1.1rem;
+}
+
+.stat-big { font-size: 1.05rem; margin-bottom: 0.4rem; }
+
+.stat-num {
+  font-family: var(--mono);
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--accent-danger);
+  line-height: 1;
+}
+
+.stat-say { font-size: 0.98rem; max-width: 46ch; }
+
+.stat-sub {
+  margin-top: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.overlooked-list {
+  flex: 1 1 320px;
+  border: 1px solid var(--rule);
+  background: #fff;
+  padding: 0.75rem 0.9rem;
+  overflow-y: auto;
+  max-height: 340px;
+}
+
+.overlooked-list h3 {
+  margin: 0.1rem 0 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.overlooked-row {
+  border-left: 3px solid var(--accent-danger);
+  padding: 0.25rem 0 0.3rem 0.55rem;
+  margin-bottom: 0.5rem;
+}
+
+.overlooked-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.overlooked-name { font-weight: 700; }
+.overlooked-count { font-family: var(--mono); color: var(--accent-danger); }
+
+.overlooked-detail {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+}
+
+.clock-city-note {
+  font-size: 0.9rem;
+  margin: 0 0 0.6rem;
+  max-width: 80ch;
 }
 
 footer {

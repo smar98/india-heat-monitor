@@ -201,6 +201,133 @@ function wbgtRiskTier(wbgtC) {
   return "below-ral";
 }
 
+// ---------------------------------------------------------------------------
+// Workload levels + the REL work-stress threshold that depends on them.
+//
+// The NIOSH REL/RAL limits are not single numbers -- they slide with how hard
+// the work is (heavier work => lower safe WBGT). Metabolic rates follow the
+// ISO 8996 activity classes (average W/m^2 x a standard ~1.8 m^2 worker).
+// Occupation examples are ILLUSTRATIVE task intensities, not fixed per-job
+// values -- the same job spans a wide range depending on the specific task.
+// We report the REL (acclimatized-worker) line, because India's chronically
+// heat-exposed outdoor laborers are among the most acclimatized workers
+// anywhere; RAL (unacclimatized) would understate their tolerance.
+//   REL[degC WBGT] = 56.7 - 11.5*log10(M),  M in watts   (NIOSH DHHS 2016-106)
+// ---------------------------------------------------------------------------
+function nioshRelC(m) { return 56.7 - 11.5 * Math.log10(m); }
+function nioshRalC(m) { return 59.9 - 14.1 * Math.log10(m); }
+
+const WORKLOAD_LEVELS = [
+  { key: "light",     label: "Light",      watts: 200, examples: "standing supervision, light assembly" },
+  { key: "moderate",  label: "Moderate",   watts: 300, examples: "brisk walking with a load, street vending" },
+  { key: "heavy",     label: "Heavy",      watts: 415, examples: "digging, brick-carrying, most farm labour" },
+  { key: "very-high", label: "Very heavy", watts: 520, examples: "sustained shovelling, peak harvest / construction bursts" },
+];
+const DEFAULT_WORKLOAD_KEY = "heavy"; // the outdoor laborers this whole story is about
+
+function workloadByKey(key) {
+  return WORKLOAD_LEVELS.find((w) => w.key === key) || WORKLOAD_LEVELS[2];
+}
+
+// Shared selected-workload state so the headline section and the workday clock
+// always agree. setWorkload() fires a DOM event both modules listen for.
+let _selectedWorkloadKey = DEFAULT_WORKLOAD_KEY;
+function getWorkload() { return workloadByKey(_selectedWorkloadKey); }
+function getRelThreshold() { return nioshRelC(getWorkload().watts); }
+function setWorkload(key) {
+  _selectedWorkloadKey = key;
+  document.dispatchEvent(new CustomEvent("workloadchange", { detail: { key } }));
+}
+
+// ---------------------------------------------------------------------------
+// HAP afternoon-avoidance window, as a CONSERVATIVE bound.
+//
+// There is no single national work-hour window. Audited state Heat Action
+// Plans differ: IMD national advice 12:00-15:00; Andhra Pradesh 12:00-16:00;
+// Odisha 11:00-15:30; Gujarat (parts) 13:00-17:00. We take the UNION of the
+// audited windows -- earliest start (Odisha's 11:00) to latest end (Gujarat's
+// 17:00) -- so an hour flagged "outside the window" falls outside even the
+// most generous afternoon-avoidance guidance any audited state uses. That
+// makes the overlooked-hours count a LOWER BOUND: under any real state window
+// (all narrower), the count can only be higher. No per-state data is claimed.
+// ---------------------------------------------------------------------------
+const HAP_WINDOW_START = 11; // inclusive IST hour
+const HAP_WINDOW_END = 17;   // exclusive IST hour (covers 11:00-16:59)
+function isInsideHapWindow(istHour) {
+  return istHour >= HAP_WINDOW_START && istHour < HAP_WINDOW_END;
+}
+
+// Sun-up cutoff: only daytime hours (meaningful solar load) count toward the
+// headline "overlooked shoulder-hours". After dark the WBGT globe/solar term
+// is ~zero, so a high night WBGT is essentially wet-bulb (hot+humid) -- real
+// discomfort, but already spoken to by IMD's "warm night" category, so we
+// report it SEPARATELY rather than folding it into the shoulder-hours claim.
+const SUN_UP_WM2 = 50;
+
+/**
+ * For one city, classify today's work-stress hours (WBGT >= the selected
+ * workload's REL line) into: inside the avoidance window; outside-but-sun-up
+ * (the "overlooked shoulder-hours" -- morning/evening, real solar load); and
+ * dark/humid (reported separately). Returns null if the city has no valid
+ * hours today.
+ */
+function computeCityWorkStress(cityId, latest, relThreshold, todayDateKey) {
+  const series = buildHourlySeriesForCity(cityId, latest).filter(
+    (h) => h.istDateKey === todayDateKey && h.wbgt_status === 0 && h.wbgt_c != null
+  );
+  if (series.length === 0) return null;
+
+  let insideWindow = 0, shoulder = 0, darkHumid = 0;
+  const shoulderHours = [];
+  for (const h of series) {
+    if (h.wbgt_c < relThreshold) continue;
+    if (isInsideHapWindow(h.istHour)) {
+      insideWindow++;
+    } else if (h.solar_wm2 > SUN_UP_WM2) {
+      shoulder++;
+      shoulderHours.push(h);
+    } else {
+      darkHumid++;
+    }
+  }
+  return {
+    insideWindow,
+    shoulder,           // overlooked daytime shoulder-hours (the headline claim)
+    darkHumid,          // separate, humidity-driven, reported not headlined
+    stressHours: insideWindow + shoulder + darkHumid,
+    shoulderHours,      // the actual hour objects, for tooltips / detail
+    hoursToday: series.length,
+  };
+}
+
+/**
+ * Aggregate the overlooked-shoulder-hours story across all cities for a given
+ * REL threshold (i.e. a given workload). Returns per-city breakdowns (sorted
+ * by overlooked shoulder-hours, descending) plus totals for the headline.
+ */
+function computeOverlookedSummary(cities, latest, relThreshold) {
+  const todayDateKey = nowInIst().dateKey;
+  const perCity = [];
+  for (const c of cities) {
+    const ws = computeCityWorkStress(c.id, latest, relThreshold, todayDateKey);
+    if (!ws) continue;
+    perCity.push({ id: c.id, name: c.name, state: c.state, ...ws });
+  }
+  perCity.sort((a, b) => b.shoulder - a.shoulder || b.stressHours - a.stressHours);
+
+  const citiesWithShoulder = perCity.filter((c) => c.shoulder > 0).length;
+  const totalShoulderHours = perCity.reduce((s, c) => s + c.shoulder, 0);
+  const totalDarkHumid = perCity.reduce((s, c) => s + c.darkHumid, 0);
+  return {
+    perCity,
+    citiesWithShoulder,
+    citiesTotal: perCity.length,
+    totalShoulderHours,
+    totalDarkHumid,
+    relThreshold,
+  };
+}
+
 /**
  * Builds the full hourly series (today + tomorrow) for one city, in IST
  * wall-clock time for display, with an `isNight` flag (19:00-06:00 IST) --
@@ -214,14 +341,30 @@ function wbgtRiskTier(wbgtC) {
  * version did that arithmetic and got the label wrong, see BUILD_LOG.md
  * step 7).
  */
-function buildHourlySeriesForCity(cityId, latest) {
+function buildHourlySeriesForCity(cityId, latest, relThreshold) {
   const cityLatest = latest.cities.find((c) => c.id === cityId);
   if (!cityLatest) return [];
+  const rel = relThreshold != null ? relThreshold : getRelThreshold();
 
   return cityLatest.hourly.map((h) => {
     const istHour = Number(h.time_ist.slice(11, 13));
     const istMinute = Number(h.time_ist.slice(14, 16));
     const isNight = istHour >= 19 || istHour < 6;
+    const hasWbgt = h.wbgt_status === 0 && h.wbgt_c != null;
+    const insideWindow = isInsideHapWindow(istHour);
+    const sunUp = h.solar_wm2 > SUN_UP_WM2;
+    // Classification for the workday clock, relative to the SELECTED workload:
+    //   below-rel      : under the acclimatized work-stress limit
+    //   stress-window  : over the limit, inside the afternoon-avoidance window
+    //   stress-shoulder: over the limit, outside the window, sun up (overlooked)
+    //   stress-dark    : over the limit, outside the window, after dark (humid)
+    let clockTier = "unknown";
+    if (hasWbgt) {
+      if (h.wbgt_c < rel) clockTier = "below-rel";
+      else if (insideWindow) clockTier = "stress-window";
+      else if (sunUp) clockTier = "stress-shoulder";
+      else clockTier = "stress-dark";
+    }
     return {
       ...h,
       istHour,
@@ -229,7 +372,11 @@ function buildHourlySeriesForCity(cityId, latest) {
       istDateKey: istDateKeyOf(h.time_ist),
       istLabel: `${String(istHour).padStart(2, "0")}:${String(istMinute).padStart(2, "0")}`,
       isNight,
-      riskTier: h.wbgt_status === 0 && h.wbgt_c != null ? wbgtRiskTier(h.wbgt_c) : "unknown",
+      insideWindow,
+      sunUp,
+      aboveRel: hasWbgt && h.wbgt_c >= rel,
+      clockTier,
+      riskTier: hasWbgt ? wbgtRiskTier(h.wbgt_c) : "unknown", // kept for backward compat
     };
   });
 }

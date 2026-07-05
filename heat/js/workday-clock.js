@@ -1,34 +1,43 @@
 /*
- * Workday clock: hourly estimated-WBGT risk bands for one city, today and
- * tomorrow, in IST wall-clock time -- including evening/night hours on
- * purpose. Humid heat can stay in a higher risk band well after sunset as
- * relative humidity climbs, which "just avoid the afternoon" guidance
- * misses; this view is built specifically to make that visible.
+ * Workday clock: hourly estimated-WBGT bands for one city, today and
+ * tomorrow, in IST wall-clock time. Coloring is relative to the SELECTED
+ * workload's REL (acclimatized) heat-stress limit, and distinguishes the
+ * three cases that carry the story:
+ *   - over the limit INSIDE the 11am-5pm avoidance window (guidance already
+ *     tells workers to avoid this),
+ *   - over the limit OUTSIDE the window with the sun up = the overlooked
+ *     morning/evening shoulder hours (the headline claim),
+ *   - over the limit after dark = humidity-driven, which IMD's warm-night
+ *     category already speaks to.
  *
- * Risk tiers use the same NIOSH RAL/REL moderate-work thresholds as the
- * map's popups (see data.js), so a city's color here never contradicts
- * what its map popup says.
+ * Listens for workload changes (from the headline section) so the whole page
+ * recomputes together.
  */
 
-const RISK_TIER_COLOR = {
-  "below-ral": "#cdd6d9",
-  "above-ral": "#e0a458",
-  "above-rel": "#b3401f",
+const CLOCK_TIER_COLOR = {
+  "below-rel": "#d7dde0",
+  "stress-window": "#e6b8a2",
+  "stress-shoulder": "#b3401f",
+  "stress-dark": "#8a7f9c",
   "unknown": "#e8e4d8",
 };
 
-const RISK_TIER_LABEL = {
-  "below-ral": "Below NIOSH's alert limit (RAL) for moderate work",
-  "above-ral": "Above RAL (unacclimatized risk), below REL",
-  "above-rel": "Above NIOSH's own limit (REL) for moderate work, even heat-acclimatized",
-  "unknown": "No estimate (solver did not converge for this hour)",
+const CLOCK_TIER_LABEL = {
+  "below-rel": "below the heat-stress limit for this workload",
+  "stress-window": "over the limit, but inside the 11am-5pm avoidance window (guidance covers this)",
+  "stress-shoulder": "over the limit, OUTSIDE the avoidance window, sun up -- an overlooked hour",
+  "stress-dark": "over the limit after dark -- humidity-driven (IMD 'warm night' territory)",
+  "unknown": "no estimate (solver did not converge for this hour)",
 };
 
 let clockCities = [];
 let clockLatest = null;
+let clockSelectedCityId = null;
 
 function renderWorkdayClock(cityId) {
-  const hourly = buildHourlySeriesForCity(cityId, clockLatest);
+  clockSelectedCityId = cityId;
+  const rel = getRelThreshold();
+  const hourly = buildHourlySeriesForCity(cityId, clockLatest, rel);
   const container = document.getElementById("workday-clock");
   container.innerHTML = "";
 
@@ -37,20 +46,13 @@ function renderWorkdayClock(cityId) {
     return;
   }
 
-  // Group by actual IST calendar date rather than assuming the first 24
-  // array entries are "today" -- if the data hasn't refreshed yet right
-  // around IST midnight, a blind slice(0,24) would mislabel yesterday's
-  // remaining hours as "today" (see BUILD_LOG.md step 7).
   const dateKeys = [...new Set(hourly.map((h) => h.istDateKey))].sort();
   const rows = dateKeys.slice(0, 2).map((key) => hourly.filter((h) => h.istDateKey === key));
-  // Label rows with the real IST date, and only claim "Today"/"Tomorrow"
-  // when the date actually is today/tomorrow in IST -- so stale data reads
-  // as stale instead of silently mislabeled.
   const todayIst = nowInIst().dateKey;
   const rowLabels = dateKeys.slice(0, 2).map((key) => {
     const dayNum = (k) => Math.round(Date.parse(k + "T00:00Z") / 86400000);
     const diff = dayNum(key) - dayNum(todayIst);
-    const short = key.slice(5).replace("-", "/"); // "07-05" -> "07/05"
+    const short = key.slice(5).replace("-", "/");
     if (diff === 0) return `Today ${short}`;
     if (diff === 1) return `Tmrw ${short}`;
     return short;
@@ -73,10 +75,10 @@ function renderWorkdayClock(cityId) {
     cellsEl.className = "clock-cells";
     for (const h of row) {
       const cell = document.createElement("div");
-      cell.className = "clock-cell" + (h.isNight ? " clock-cell-night" : "");
-      cell.style.background = RISK_TIER_COLOR[h.riskTier];
+      cell.className = "clock-cell" + (h.insideWindow ? " clock-cell-window" : "");
+      cell.style.background = CLOCK_TIER_COLOR[h.clockTier];
       const wbgtText = h.wbgt_status === 0 && h.wbgt_c != null ? `${h.wbgt_c.toFixed(1)}°C WBGT` : "no estimate";
-      cell.title = `${h.istLabel} IST -- ${wbgtText} (${RISK_TIER_LABEL[h.riskTier]})${h.isNight ? " -- night hour" : ""}`;
+      cell.title = `${h.istLabel} IST — ${wbgtText}: ${CLOCK_TIER_LABEL[h.clockTier]}`;
       if (h.istHour % 3 === 0) {
         const tick = document.createElement("div");
         tick.className = "clock-cell-tick";
@@ -90,6 +92,16 @@ function renderWorkdayClock(cityId) {
   });
 
   container.appendChild(table);
+
+  // Per-city one-line takeaway tied to the selected workload.
+  const ws = computeCityWorkStress(cityId, clockLatest, rel, todayIst);
+  const note = document.getElementById("clock-city-note");
+  if (note && ws) {
+    const w = getWorkload();
+    note.innerHTML = ws.shoulder > 0
+      ? `Today, ${clockCities.find((c) => c.id === cityId).name} has <strong>${ws.shoulder} work-stress hour${ws.shoulder === 1 ? "" : "s"}</strong> for ${w.label.toLowerCase()} work outside the 11&ndash;5 avoidance window (sun up), plus ${ws.insideWindow} inside it.`
+      : `Today, no ${w.label.toLowerCase()}-work hour crosses the limit outside the 11&ndash;5 window in this city.`;
+  }
 }
 
 async function initWorkdayClock() {
@@ -97,9 +109,10 @@ async function initWorkdayClock() {
   clockCities = cities;
   clockLatest = latest;
 
-  const records = computeRanks(buildCityMetrics(cities, latest, normals));
-  const biggestClimber = [...records].sort((a, b) => b.misrankDelta - a.misrankDelta)[0];
-  const defaultCityId = biggestClimber ? biggestClimber.id : cities[0].id;
+  // Default to the city with the most overlooked shoulder-hours today, so the
+  // clock opens on the sharpest example of the headline claim.
+  const summary = computeOverlookedSummary(cities, latest, getRelThreshold());
+  const defaultCityId = summary.perCity.length ? summary.perCity[0].id : cities[0].id;
 
   const select = document.getElementById("clock-city-select");
   const sortedCities = [...cities].sort((a, b) => a.name.localeCompare(b.name));
@@ -112,13 +125,11 @@ async function initWorkdayClock() {
   }
 
   select.addEventListener("change", () => renderWorkdayClock(Number(select.value)));
-  renderWorkdayClock(defaultCityId);
+  document.addEventListener("workloadchange", () => {
+    if (clockSelectedCityId != null) renderWorkdayClock(clockSelectedCityId);
+  });
 
-  if (biggestClimber) {
-    document.getElementById("clock-default-note").textContent =
-      `Defaulted to ${biggestClimber.name} -- today's biggest climber ` +
-      `(dry-bulb rank #${biggestClimber.dryBulbRank}, humid-heat rank #${biggestClimber.wbgtRank}).`;
-  }
+  renderWorkdayClock(defaultCityId);
 }
 
 initWorkdayClock().catch((err) => {

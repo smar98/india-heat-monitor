@@ -90,6 +90,10 @@
         <dd>How hot it is once humidity is counted &mdash; a measure of how well sweating can still cool you. Always at or below the dry-bulb reading; the closer the two, the harder your body has to work.</dd>
         <dt>Estimated WBGT</dt>
         <dd>Wet Bulb Globe Temperature: the standard measure of heat stress for people working outdoors, combining heat, humidity, direct sun, and wind. "Estimated" because it's computed from weather data here, not read off a physical instrument.</dd>
+        <dt>Heat-stress limit (REL)</dt>
+        <dd>The WBGT above which continuous outdoor work gets risky, from NIOSH. It slides with how hard the work is &mdash; heavier work, lower limit &mdash; which is why there's a workload selector. Shown for acclimatized workers, the right setting for India's outdoor laborers.</dd>
+        <dt>Avoidance window &amp; shoulder hours</dt>
+        <dd>Heat guidance says avoid the afternoon (we use the widest state version, 11am&ndash;5pm) and work the morning/evening "shoulders" instead. This dashboard flags shoulder hours that cross the heat-stress limit anyway &mdash; the hours the advice overlooks.</dd>
         <dt>Misranking delta</dt>
         <dd>How many places a city moves between the ordinary temperature ranking and the WBGT ranking today. &#9650;12 means it ranks 12 places more dangerous once humidity, sun, and wind are counted.</dd>
         <dt>1991&ndash;2020 normal</dt>
@@ -98,6 +102,31 @@
       <p class="insights-note" style="margin-top:0.5rem;">Scientific definitions, formulas, and error bounds live on the <a href="methods.html">methods page</a>.</p>
     </div>
   </details>
+
+  <section id="headline-section">
+    <h2>The overlooked hours</h2>
+    <p class="section-note">
+      India's heat guidance tells outdoor workers to avoid the afternoon and
+      shift work to the morning and evening. But on hot days those shoulder
+      hours themselves cross the heat-stress limit &mdash; so the advice can
+      send people into hours that aren't actually safe. Pick a workload and
+      see how often that happens today, live.
+    </p>
+    <div id="workload-controls" class="workload-controls"></div>
+    <div class="headline-flex">
+      <div id="overlooked-stat" class="overlooked-stat"></div>
+      <div id="overlooked-list" class="overlooked-list"></div>
+    </div>
+    <p class="caveat">
+      &ldquo;Outside the window&rdquo; uses 11am&ndash;5pm &mdash; the widest
+      afternoon-avoidance window any audited state Heat Action Plan uses
+      (Odisha starts 11:00, Gujarat ends 17:00; IMD's national advice is
+      12&ndash;3). So these hours fall outside <em>even the most generous</em>
+      version of the guidance &mdash; the count is a conservative lower
+      bound. The limit shown is NIOSH's REL for acclimatized workers at the
+      selected workload; see the <a href="methods.html">methods page</a>.
+    </p>
+  </section>
 
   <section id="map-section">
     <h2>The map</h2>
@@ -139,29 +168,30 @@
   <section id="workday-clock-section">
     <h2>Workday clock</h2>
     <p class="section-note">
-      Hourly estimated-WBGT risk bands, today and tomorrow, in IST. Night
-      hours (19:00&ndash;06:00 IST) are outlined &mdash; humid heat often
-      stays in a higher risk band well after sunset as relative humidity
-      rises, which "avoid only the afternoon" guidance misses.
+      One city, hour by hour, today and tomorrow (IST). Cells are colored
+      against the heat-stress limit for the workload you selected above. The
+      shaded band is the 11am&ndash;5pm afternoon-avoidance window; the
+      hours that matter are the dark-red ones <em>outside</em> it, while the
+      sun is up &mdash; the overlooked morning and evening hours.
     </p>
     <div class="clock-controls">
       <label for="clock-city-select">City:</label>
       <select id="clock-city-select"></select>
-      <span id="clock-default-note"></span>
     </div>
+    <p id="clock-city-note" class="clock-city-note"></p>
     <div id="workday-clock"></div>
     <div class="clock-legend">
-      <span><span class="swatch" style="background:#cdd6d9;"></span>Below NIOSH RAL (moderate work)</span>
-      <span><span class="swatch" style="background:#e0a458;"></span>Above RAL, below REL</span>
-      <span><span class="swatch" style="background:#b3401f;"></span>Above REL (acclimatized limit)</span>
-      <span>Outlined cells = night hours (19:00&ndash;06:00 IST)</span>
+      <span><span class="swatch" style="background:#d7dde0;"></span>Below the limit</span>
+      <span><span class="swatch" style="background:#e6b8a2;"></span>Over limit, inside 11&ndash;5 window (guidance covers this)</span>
+      <span><span class="swatch" style="background:#b3401f;"></span>Over limit, outside window, sun up (overlooked)</span>
+      <span><span class="swatch" style="background:#8a7f9c;"></span>Over limit, after dark (humidity-driven)</span>
     </div>
     <p class="caveat">
-      These are NIOSH's own reference limits for continuous moderate
-      outdoor work (not this dashboard's invention) &mdash; described here
-      as "lower-risk outdoor work windows under estimated WBGT
-      assumptions," never as "safe hours." See the methods page for the
-      full derivation.
+      Limits are NIOSH's own reference values for continuous outdoor work
+      (not this dashboard's invention), shown for acclimatized workers
+      (REL). Described here as "lower-risk outdoor work windows under
+      estimated WBGT assumptions," never as "safe hours." See the
+      <a href="methods.html">methods page</a> for the full derivation.
     </p>
   </section>
 
@@ -191,6 +221,7 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.17/dist/plot.umd.min.js"></script>
 <script src="js/data.js"></script>
+<script src="js/headline.js"></script>
 <script src="js/map.js"></script>
 <script src="js/insights.js"></script>
 <script src="js/slope-chart.js"></script>

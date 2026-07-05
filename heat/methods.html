@@ -50,11 +50,14 @@
       WBGT-style thresholds, or vice versa.
     </p>
 
-    <h3>1. Dry-bulb temperature</h3>
+    <h3>1. Dry-bulb (air) temperature</h3>
     <p>
-      The ordinary air temperature, taken as-is from Open-Meteo. This is
-      the public-conversation baseline this dashboard is contrasting
-      against.
+      The ordinary air temperature a thermometer reads, taken as-is from
+      Open-Meteo. Its daily maximum is the physical quantity IMD's
+      heat-wave declarations threshold on (IMD's own term is "maximum
+      temperature," not "dry-bulb"). Here it is used only as the
+      <code>T</code> input to the wet-bulb formula below and the WBGT model
+      &mdash; not as a ranking the dashboard sets itself against.
     </p>
 
     <h3>2. Wet-bulb temperature — Stull (2011) approximation</h3>
@@ -102,8 +105,9 @@
       worldwide, and applied by Indian researchers in urban and
       occupational heat-stress studies. It is not part of India's official
       heat-warning vocabulary &mdash; which is precisely the gap this
-      dashboard examines: estimating WBGT from public weather data shows
-      what a dry-bulb-only ranking leaves out. Unlike wet-bulb temperature
+      dashboard examines: estimating WBGT from public weather data shows,
+      hour by hour, what maximum-temperature heat-wave criteria and fixed
+      afternoon work-hour windows leave out. Unlike wet-bulb temperature
       alone, WBGT also incorporates radiant heat (solar radiation) and wind.
       True WBGT requires a physical instrument (a black globe thermometer)
       that this dashboard does not have access to. Instead, this is an

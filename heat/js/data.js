@@ -1,32 +1,23 @@
 /*
- * Shared data loading and ranking logic for the India Humid Heat Monitor.
- * Used by both map.js and slope-chart.js so the two views can never
- * disagree about how a city's rank or misranking delta is computed.
+ * Shared data loading and computation for the India Humid Heat Monitor.
+ * Used by every view (headline, map, chart, workday clock) so they can
+ * never disagree about how a number was computed.
  *
- * Core definition (the dashboard's central editorial claim, made concrete):
- *   - "Dry-bulb rank": cities ranked by today's peak (max) dry-bulb air
- *     temperature, hottest = rank 1. This is the public-conversation metric.
- *   - "Humid-heat rank": the same cities ranked by today's peak estimated
- *     WBGT, highest = rank 1. This is the metric that accounts for
- *     humidity, radiant heat (solar), and wind.
- *   - "Misranking delta" = dry-bulb rank MINUS humid-heat rank. A large
- *     POSITIVE delta means a city looks unremarkable on ordinary
- *     temperature (a high, unremarkable rank number) but is actually near
- *     the top of the humid-heat danger list (a low rank number) -- these
- *     are the "climbers" this dashboard exists to surface. A negative
- *     delta means the opposite: a city that looks scarier on raw
- *     temperature than its humid-heat risk actually warrants.
- *
- * Never mix wet-bulb values into this ranking -- the rank-shift comparison
- * is specifically dry-bulb vs. WBGT (the two metrics the project brief
- * says should be compared), with plain wet-bulb kept as its own separate
- * display metric (see the "current wet-bulb" map layer).
+ * The dashboard's central claim, made concrete: India's heat guidance
+ * tells outdoor workers to avoid the afternoon (we use 11:00-17:00 IST,
+ * the union of audited state HAP windows -- see HAP_WINDOW notes below)
+ * and shift work to the morning/evening shoulders. This module counts,
+ * per city and per selected workload, the hours in those shoulders that
+ * THEMSELVES cross the NIOSH acclimatized work-stress limit (REL) while
+ * the sun is up -- "the overlooked hours." After-dark exceedances are
+ * humidity-driven (the WBGT solar term is ~zero at night) and are always
+ * reported separately, never folded into the headline count.
  */
 
 const DATA_BASE = "data";
 
-// map.js, slope-chart.js, and workday-clock.js each call loadAllData() on
-// the same page load -- without caching, that's three separate fetches of
+// headline.js, map.js, and workday-clock.js each call loadAllData() on the
+// same page load -- without caching, that's three separate fetches of
 // normals.json (~3.7MB) alone. Cache the one in-flight/completed request so
 // every caller shares it.
 let _loadAllDataPromise = null;
@@ -82,25 +73,19 @@ function istDateKeyOf(timeIstString) {
 // approximation (documented in BUILD_LOG.md step 7), not an oversight.
 
 /**
- * Builds one metrics record per city: today's peak dry-bulb, peak WBGT,
- * peak wet-bulb, the hour nearest the real current moment ("current"), and
- * the anomaly of today's peak wet-bulb vs. the 1991-2020 normal for this
- * calendar date. Cities with no valid hourly data are skipped (not
- * zero-filled) so a data gap can't silently masquerade as "no risk."
- *
- * "Today" is the actual current IST calendar date (matched against each
- * hour's real time_ist field), not just "the first 24 array entries" --
- * that distinction matters if the data was fetched close to IST midnight
- * and hasn't refreshed yet by the time a user loads the page.
+ * Builds one record per city for the MAP's secondary layers: the current
+ * wet-bulb reading (hour nearest the real moment) and the anomaly of today's
+ * peak wet-bulb vs. the 1991-2020 normal for this calendar date. Cities with
+ * no valid hourly data today are skipped (not zero-filled) so a data gap
+ * can't silently masquerade as "no risk." The overlooked-hours work-stress
+ * numbers are computed separately (computeCityWorkStress / *Summary), not
+ * here.
  */
 function buildCityMetrics(cities, latest, normals) {
   const cityById = new Map(cities.map((c) => [c.id, c]));
   const normalsById = normals.cities; // keyed by string(id) in normals.json
   const { dateKey: todayIstDateKey, nowUtcMs } = nowInIst();
-  // normals.json is keyed "MM-DD"; use the IST date's month-day so the
-  // normal we compare against matches the same calendar day the "today"
-  // window (below) is built from.
-  const todayKey = todayIstDateKey.slice(5);
+  const todayKey = todayIstDateKey.slice(5); // "MM-DD" for the normals lookup
 
   const records = [];
   for (const cityLatest of latest.cities) {
@@ -110,27 +95,16 @@ function buildCityMetrics(cities, latest, normals) {
     const todayHours = cityLatest.hourly.filter((h) => istDateKeyOf(h.time_ist) === todayIstDateKey);
     if (todayHours.length === 0) continue; // data hasn't refreshed for today's IST date yet
 
-    const dryBulbValues = todayHours.map((h) => h.temp_c).filter((v) => v != null);
-    const wbgtValues = todayHours
-      .filter((h) => h.wbgt_status === 0 && h.wbgt_c != null)
-      .map((h) => h.wbgt_c);
     const wetBulbValues = todayHours.map((h) => h.wet_bulb_c).filter((v) => v != null);
-
-    if (dryBulbValues.length === 0 || wbgtValues.length === 0) continue;
-
-    const peakDryBulb = Math.max(...dryBulbValues);
-    const peakWbgt = Math.max(...wbgtValues);
     const peakWetBulb = wetBulbValues.length ? Math.max(...wetBulbValues) : null;
 
     // "Current" = the hour whose true UTC instant is nearest the real
-    // current moment, not just the first array entry (which used to be
-    // wrong by up to ~12 hours -- see BUILD_LOG.md step 7).
+    // current moment (not the first array entry -- see BUILD_LOG.md step 7).
     const nearestHour = [...cityLatest.hourly].sort(
       (a, b) => Math.abs(new Date(a.time_utc + "Z").getTime() - nowUtcMs) -
                 Math.abs(new Date(b.time_utc + "Z").getTime() - nowUtcMs)
     )[0];
     const currentWetBulb = nearestHour ? nearestHour.wet_bulb_c : null;
-    const currentWbgt = nearestHour && nearestHour.wbgt_status === 0 ? nearestHour.wbgt_c : null;
 
     const cityNormals = normalsById[String(city.id)];
     const normalToday = cityNormals ? cityNormals.normals_by_date[todayKey] : null;
@@ -145,60 +119,26 @@ function buildCityMetrics(cities, latest, normals) {
       state: city.state,
       lat: city.lat,
       lon: city.lon,
-      peakDryBulb,
-      peakWbgt,
-      peakWetBulb,
       currentWetBulb,
-      currentWbgt,
       wetBulbAnomaly,
       normalMaxWetBulb: normalToday ? normalToday.normal_max_wet_bulb_c : null,
-      peakWbgtHour: todayHours.find((h) => h.wbgt_status === 0 && h.wbgt_c === peakWbgt) || null,
     });
   }
   return records;
 }
 
-/** Adds dryBulbRank, wbgtRank, misrankDelta to each record (mutates and returns the array). */
-function computeRanks(records) {
-  const byDryBulbDesc = [...records].sort((a, b) => b.peakDryBulb - a.peakDryBulb);
-  byDryBulbDesc.forEach((r, i) => { r.dryBulbRank = i + 1; });
+// (The old dry-bulb-rank vs WBGT-rank "misranking" computation, and the
+// fixed moderate-work NIOSH constants that supported it, were removed when
+// the dashboard reframed around the overlooked-hours claim -- see BUILD_LOG.md.
+// The NIOSH equations now live below with a selectable workload.)
 
-  const byWbgtDesc = [...records].sort((a, b) => b.peakWbgt - a.peakWbgt);
-  byWbgtDesc.forEach((r, i) => { r.wbgtRank = i + 1; });
+const MONTH_NAMES = ["January","February","March","April","May","June",
+  "July","August","September","October","November","December"];
 
-  for (const r of records) {
-    r.misrankDelta = r.dryBulbRank - r.wbgtRank;
-  }
-  return records;
-}
-
-// ---------------------------------------------------------------------------
-// NIOSH RAL (unacclimatized) / REL (acclimatized) WBGT thresholds for
-// "moderate work" (300 kcal/h ~= 349W), evaluated from NIOSH DHHS 2016-106's
-// own stated equations -- see scripts/wbgt.py for the source and derivation.
-// Duplicated here rather than computed server-side because this is a static
-// site with no shared backend between the Python pipeline and the browser;
-// kept as named constants (not magic numbers) so the two copies are easy to
-// diff if either changes. Shared by map.js and workday-clock.js.
-// ---------------------------------------------------------------------------
-const NIOSH_RAL_MODERATE_C = 59.9 - 14.1 * Math.log10(349);
-const NIOSH_REL_MODERATE_C = 56.7 - 11.5 * Math.log10(349);
-
-function wbgtRiskLabel(wbgtC) {
-  if (wbgtC >= NIOSH_REL_MODERATE_C) {
-    return "above NIOSH's own limit (REL) for continuous moderate work, even heat-acclimatized";
-  }
-  if (wbgtC >= NIOSH_RAL_MODERATE_C) {
-    return "above NIOSH's limit (RAL) for unacclimatized workers at moderate work";
-  }
-  return "below NIOSH's moderate-work alert limits";
-}
-
-/** Coarse risk tier for the workday clock's cell coloring. */
-function wbgtRiskTier(wbgtC) {
-  if (wbgtC >= NIOSH_REL_MODERATE_C) return "above-rel";
-  if (wbgtC >= NIOSH_RAL_MODERATE_C) return "above-ral";
-  return "below-ral";
+/** "2026-07-07" -> "July 7" (human date, no leading zero). */
+function formatIstDateLong(dateKey) {
+  const month = MONTH_NAMES[Number(dateKey.slice(5, 7)) - 1];
+  return `${month} ${Number(dateKey.slice(8, 10))}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -376,7 +316,6 @@ function buildHourlySeriesForCity(cityId, latest, relThreshold) {
       sunUp,
       aboveRel: hasWbgt && h.wbgt_c >= rel,
       clockTier,
-      riskTier: hasWbgt ? wbgtRiskTier(h.wbgt_c) : "unknown", // kept for backward compat
     };
   });
 }

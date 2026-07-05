@@ -52,10 +52,10 @@ function renderWorkdayClock(cityId) {
   const rowLabels = dateKeys.slice(0, 2).map((key) => {
     const dayNum = (k) => Math.round(Date.parse(k + "T00:00Z") / 86400000);
     const diff = dayNum(key) - dayNum(todayIst);
-    const short = key.slice(5).replace("-", "/");
-    if (diff === 0) return `Today ${short}`;
-    if (diff === 1) return `Tmrw ${short}`;
-    return short;
+    const long = formatIstDateLong(key); // "July 5"
+    if (diff === 0) return `Today · ${long}`;
+    if (diff === 1) return `Tmrw · ${long}`;
+    return long;
   });
 
   const table = document.createElement("div");

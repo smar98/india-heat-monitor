@@ -27,16 +27,17 @@
   <section>
     <h2>The central question</h2>
     <p class="section-note">
-      Public heat communication in India runs mostly on dry-bulb air
-      temperature. This dashboard asks: which cities look less dangerous on
-      that ordinary ranking, but become high-risk once humidity, radiant
-      heat, and time of day are accounted for? A prior-art review (see the
+      India's Heat Action Plans tell outdoor workers to avoid the afternoon
+      (roughly 11am&ndash;5pm across states) and shift work to the morning
+      and evening. This dashboard asks: how often do those "safer" shoulder
+      hours themselves cross the occupational heat-stress limit, once
+      humidity, sun, and wind are counted? A prior-art review (see the
       repository's <code>existing_tools_research.md</code>) found serious
       tools for occupational heat stress, thermal-comfort datasets, and
-      live weather maps, but no public India city-ranking tool built
-      specifically around this dry-bulb-vs-humid-heat misranking. This
-      dashboard exists to fill that specific gap &mdash; not to claim no
-      one tracks heat risk in India, which official IMD/NDMA heat-wave
+      live weather maps, but no public, India-specific, hourly view of
+      outdoor-work heat stress set against the fixed work-hour guidance.
+      This dashboard exists to fill that specific gap &mdash; not to claim
+      no one tracks heat risk in India, which official IMD/NDMA heat-wave
       communication clearly does.
     </p>
   </section>
@@ -238,27 +239,41 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
   </section>
 
   <section>
-    <h2>What "misranking delta" means</h2>
+    <h2>What "overlooked hours" means</h2>
     <p>
-      Cities are ranked twice each day: once by today's peak (max)
-      dry-bulb temperature, and once by today's peak estimated WBGT. The
-      misranking delta is dry-bulb rank minus WBGT rank. A large positive
-      delta means a city looks unremarkable on ordinary temperature (a
-      high rank number) but is near the top of the humid-heat danger list
-      (a low rank number) &mdash; a "climber," in this dashboard's
-      language. This computation runs identically in the map and the
-      rank-shift chart (both read from <code>heat/js/data.js</code>) so
-      the two views can never disagree with each other.
+      For each city, every hour of today is classified against the NIOSH
+      REL heat-stress limit for the selected workload (acclimatized
+      workers). An hour is an <strong>overlooked hour</strong> when it
+      crosses that limit, falls <em>outside</em> the 11am&ndash;5pm
+      afternoon-avoidance window, and has the sun up (shortwave radiation
+      above ~50&nbsp;W/m&sup2;). Those are the morning and evening
+      &ldquo;shoulder&rdquo; hours that guidance tells workers to shift
+      into &mdash; yet on hot days they can carry real, solar-driven heat
+      stress. Hours that cross the limit <em>after dark</em> are counted
+      and reported separately, because after sunset WBGT's globe/solar term
+      is near zero, so a high night value is essentially humid heat
+      (wet-bulb) &mdash; which IMD's &ldquo;warm night&rdquo; category
+      already speaks to.
+    </p>
+    <p>
+      The 11am&ndash;5pm window is the <strong>union</strong> of the
+      audited state Heat Action Plan windows (Odisha starts 11:00, Gujarat
+      ends 17:00; IMD's national advice is 12&ndash;3; Andhra Pradesh
+      12&ndash;4). Using the widest window makes the overlooked-hours count
+      a <em>conservative lower bound</em>: an hour flagged as overlooked
+      falls outside even the most generous version of the guidance, so
+      under any actual (narrower) state window the count could only be
+      higher. No per-state window data is claimed &mdash; that is deferred
+      to a later version.
     </p>
     <p class="caveat">
-      The direction of the shift is not fixed, and this dashboard does not
-      claim that humid coastal cities are always the underrated ones.
-      Because estimated WBGT also weighs solar radiation and wind, there
-      are days when inland northern cities climb and coastal cities fall.
-      The claim being made is narrower and more defensible: a dry-bulb
-      ranking misorders cities' physiological heat risk, and <em>which</em>
-      cities it misorders changes with the weather &mdash; which is exactly
-      why a live view exists instead of a one-off infographic.
+      Which cities have the most overlooked hours changes day to day with
+      the weather &mdash; because estimated WBGT weighs sun and wind, some
+      days it is inland northern cities, other days humid coastal ones.
+      This dashboard does not claim any fixed set of cities is always
+      underrated; the claim is that fixed afternoon-only work-hour guidance
+      systematically misses solar-driven stress in the shoulder hours, and
+      a live view is the only way to show where and when.
     </p>
   </section>
 

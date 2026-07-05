@@ -1,23 +1,30 @@
 /*
- * Interactive India map -- the misranking-delta overlay is the default
- * layer, with toggles for current wet-bulb and anomaly-vs-1991-2020-normal.
- * Built with Leaflet (CDN, MIT-licensed) + OpenStreetMap tiles + a vendored,
- * simplified India state-boundary GeoJSON (see heat/data/india_states.geojson.LICENSE.txt).
+ * Interactive India map. Default layer: today's overlooked hours per city
+ * (work-stress hours outside the 11am-5pm avoidance window, sun up, at the
+ * selected workload) -- the same metric as the headline section, shown
+ * spatially. Toggle layers: current wet-bulb (a separate humid-heat
+ * physiology reading), and anomaly vs the 1991-2020 normal.
+ *
+ * Built with Leaflet (CDN, MIT) + Esri Light Gray Canvas tiles (English
+ * labels) + a vendored, simplified India state-boundary GeoJSON (see
+ * heat/data/india_states.geojson.LICENSE.txt).
  */
 
 const LAYER_DEFS = {
-  misrank: {
-    label: "Misranking delta",
+  overlooked: {
+    label: "Overlooked hours",
     caption:
-      "Dry-bulb rank minus humid-heat (WBGT) rank, today. Warm colors = " +
-      "cities that look less dangerous on ordinary temperature but rank " +
-      "far higher once humidity, radiant heat, and wind are counted.",
+      "Work-stress hours today that fall OUTSIDE the 11am-5pm avoidance " +
+      "window, with the sun up, at the selected workload -- the morning and " +
+      "evening hours guidance tells workers to shift into. Bigger, redder " +
+      "dots = more overlooked hours.",
   },
   wetbulb: {
     label: "Current wet-bulb",
     caption:
-      "Wet-bulb temperature right now (Stull 2011 approximation) -- the " +
-      "humid-heat physiology story, kept separate from WBGT work-risk bands.",
+      "Wet-bulb temperature right now (Stull 2011 approximation): how well " +
+      "sweating can still cool a person once humidity is counted. A separate " +
+      "physiology reading, not the work-stress count.",
   },
   anomaly: {
     label: "Anomaly vs. 1991-2020 normal",
@@ -27,36 +34,22 @@ const LAYER_DEFS = {
   },
 };
 
-function colorForMisrank(delta, maxAbs) {
-  // Diverging: blue = overrated on dry-bulb (negative), gray = neutral, red/orange = underrated (climber)
-  const t = Math.max(-1, Math.min(1, delta / (maxAbs || 1)));
-  if (t >= 0) {
-    // 0 -> gray, 1 -> strong orange/red
-    const r = Math.round(150 + t * (179 - 150));
-    const g = Math.round(150 - t * (150 - 64));
-    const b = Math.round(150 - t * (150 - 31));
-    return `rgb(${r},${g},${b})`;
-  } else {
-    const s = -t;
-    const r = Math.round(150 - s * (150 - 70));
-    const g = Math.round(150 - s * (150 - 100));
-    const b = Math.round(150 + s * (200 - 150));
-    return `rgb(${r},${g},${b})`;
-  }
+function colorForOverlooked(count, maxCount) {
+  if (count <= 0) return "#b9b4a6"; // none today: muted gray
+  const t = Math.max(0, Math.min(1, count / (maxCount || 1)));
+  const r = Math.round(230 + t * (179 - 230));
+  const g = Math.round(165 - t * (165 - 64));
+  const b = Math.round(140 - t * (140 - 31));
+  return `rgb(${r},${g},${b})`;
 }
 
 function colorForSequential(value, min, max) {
   const t = max > min ? Math.max(0, Math.min(1, (value - min) / (max - min))) : 0.5;
-  // pale straw -> deep red
   const r = Math.round(240 + t * (179 - 240));
   const g = Math.round(230 - t * (230 - 64));
   const b = Math.round(200 - t * (200 - 31));
   return `rgb(${r},${g},${b})`;
 }
-
-// NIOSH_RAL_MODERATE_C / NIOSH_REL_MODERATE_C / wbgtRiskLabel() now live in
-// data.js (shared with workday-clock.js) -- data.js is loaded before this
-// file in index.html.
 
 function colorForAnomaly(anomaly, maxAbs) {
   const t = Math.max(-1, Math.min(1, anomaly / (maxAbs || 1)));
@@ -65,37 +58,38 @@ function colorForAnomaly(anomaly, maxAbs) {
     const g = Math.round(200 - t * (200 - 64));
     const b = Math.round(200 - t * (200 - 31));
     return `rgb(${r},${g},${b})`;
-  } else {
-    const s = -t;
-    const r = Math.round(200 - s * (200 - 90));
-    const g = Math.round(200 - s * (200 - 130));
-    const b = Math.round(210 + s * (235 - 210));
-    return `rgb(${r},${g},${b})`;
   }
+  const s = -t;
+  const r = Math.round(200 - s * (200 - 90));
+  const g = Math.round(200 - s * (200 - 130));
+  const b = Math.round(210 + s * (235 - 210));
+  return `rgb(${r},${g},${b})`;
 }
 
 async function initMap() {
   const { cities, latest, normals } = await loadAllData();
-  const records = computeRanks(buildCityMetrics(cities, latest, normals));
+  const records = buildCityMetrics(cities, latest, normals);
+
+  // Per-city work-stress breakdown at the currently selected workload,
+  // recomputed on workloadchange so the default layer and popups stay live.
+  let workStressById = new Map();
+  function recomputeWorkStress() {
+    const rel = getRelThreshold();
+    const todayKey = nowInIst().dateKey;
+    workStressById = new Map();
+    for (const r of records) {
+      const ws = computeCityWorkStress(r.id, latest, rel, todayKey);
+      if (ws) workStressById.set(r.id, ws);
+    }
+  }
+  recomputeWorkStress();
 
   const map = L.map("map", { scrollWheelZoom: true }).setView([22.5, 80], 5);
 
-  // Esri Light Gray Canvas instead of default OSM tiles: labels are in
-  // English everywhere (OSM's default style labels each country in its own
-  // language -- user-reported), and the muted canvas fits the policy-memo
-  // register better than a full road map.
   L.tileLayer(
     "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-    {
-      attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
-      maxZoom: 10,
-      minZoom: 4,
-    }
+    { attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ", maxZoom: 10, minZoom: 4 }
   ).addTo(map);
-  // Place-name labels as a second tile layer, added after the base so it
-  // draws above it -- but left in the default tile pane so labels stay
-  // *below* the city circle markers and state boundaries (vectors render
-  // in a higher pane).
   L.tileLayer(
     "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
     { maxZoom: 10, minZoom: 4 }
@@ -110,42 +104,46 @@ async function initMap() {
       }).addTo(map);
     });
 
-  const maxAbsDelta = Math.max(...records.map((r) => Math.abs(r.misrankDelta)), 1);
   const wetBulbValues = records.map((r) => r.currentWetBulb).filter((v) => v != null);
   const minWetBulb = Math.min(...wetBulbValues);
   const maxWetBulb = Math.max(...wetBulbValues);
   const anomalyValues = records.map((r) => r.wetBulbAnomaly).filter((v) => v != null);
   const maxAbsAnomaly = anomalyValues.length ? Math.max(...anomalyValues.map(Math.abs), 1) : 1;
 
-  let currentLayer = "misrank";
+  let currentLayer = "overlooked";
   const markers = [];
 
   function styleFor(record) {
-    if (currentLayer === "misrank") {
-      const radius = 5 + Math.min(10, Math.abs(record.misrankDelta) * 0.35);
-      return { radius, color: colorForMisrank(record.misrankDelta, maxAbsDelta) };
+    if (currentLayer === "overlooked") {
+      const ws = workStressById.get(record.id);
+      const count = ws ? ws.shoulder : 0;
+      const maxCount = Math.max(1, ...[...workStressById.values()].map((w) => w.shoulder));
+      return { radius: 5 + Math.min(11, count * 1.4), color: colorForOverlooked(count, maxCount) };
     }
     if (currentLayer === "wetbulb") {
       const v = record.currentWetBulb;
       return { radius: 7, color: v != null ? colorForSequential(v, minWetBulb, maxWetBulb) : "#999" };
     }
-    // anomaly
     const a = record.wetBulbAnomaly;
     return { radius: a != null ? 6 + Math.min(8, Math.abs(a) * 2) : 5, color: a != null ? colorForAnomaly(a, maxAbsAnomaly) : "#999" };
   }
 
+  // Popup is a function so Leaflet re-evaluates it each open -- it always
+  // reflects the currently selected workload without rebinding.
   function popupHtml(record) {
+    const ws = workStressById.get(record.id);
+    const w = getWorkload();
+    const shoulderLine = ws && ws.shoulder > 0
+      ? `<div class="popup-climb">${ws.shoulder} overlooked hour${ws.shoulder === 1 ? "" : "s"} today for ${w.label.toLowerCase()} work &mdash; outside the 11&ndash;5 window, sun up${ws.shoulderHours.length ? ` (${ws.shoulderHours.map((h) => h.istLabel).join(", ")} IST)` : ""}.</div>`
+      : `<div class="popup-row" style="color:#55534c;font-size:0.8rem;">No overlooked work-stress hours today at ${w.label.toLowerCase()} workload.</div>`;
     return `
       <div class="popup-city">${record.name}</div>
       <div class="popup-state">${record.state}</div>
-      <div class="popup-row"><span class="label">Dry-bulb rank (today)</span><span class="value">#${record.dryBulbRank} of 50</span></div>
-      <div class="popup-row"><span class="label">Humid-heat (WBGT) rank</span><span class="value">#${record.wbgtRank} of 50</span></div>
-      <div class="popup-row"><span class="label">Peak dry-bulb</span><span class="value">${record.peakDryBulb.toFixed(1)}&deg;C</span></div>
-      <div class="popup-row"><span class="label">Peak wet-bulb (Stull)</span><span class="value">${record.peakWetBulb != null ? record.peakWetBulb.toFixed(1) + "&deg;C" : "n/a"}</span></div>
-      <div class="popup-row"><span class="label">Peak est. WBGT</span><span class="value">${record.peakWbgt.toFixed(1)}&deg;C</span></div>
+      ${ws ? `<div class="popup-row"><span class="label">Inside 11&ndash;5 window</span><span class="value">${ws.insideWindow} stress hr</span></div>` : ""}
+      ${ws ? `<div class="popup-row"><span class="label">After dark (humidity)</span><span class="value">${ws.darkHumid} hr</span></div>` : ""}
+      <div class="popup-row"><span class="label">Current wet-bulb</span><span class="value">${record.currentWetBulb != null ? record.currentWetBulb.toFixed(1) + "&deg;C" : "n/a"}</span></div>
       ${record.wetBulbAnomaly != null ? `<div class="popup-row"><span class="label">vs. 1991-2020 normal</span><span class="value">${record.wetBulbAnomaly >= 0 ? "+" : ""}${record.wetBulbAnomaly.toFixed(1)}&deg;C</span></div>` : ""}
-      <div class="popup-row" style="margin-top:0.35rem;font-size:0.78rem;color:#55534c;">${wbgtRiskLabel(record.peakWbgt)}</div>
-      ${record.misrankDelta >= 10 ? `<div class="popup-climb">Climbs ${record.misrankDelta} ranks under humid-heat vs. ordinary temperature.</div>` : ""}
+      ${shoulderLine}
     `;
   }
 
@@ -158,7 +156,7 @@ async function initMap() {
       weight: 0.75,
       fillOpacity: 0.85,
     }).addTo(map);
-    marker.bindPopup(popupHtml(record));
+    marker.bindPopup(() => popupHtml(record));
     markers.push({ record, marker });
   }
 
@@ -178,6 +176,12 @@ async function initMap() {
       currentLayer = btn.dataset.layer;
       redraw();
     });
+  });
+
+  // Keep the default layer + open popups current when workload changes.
+  document.addEventListener("workloadchange", () => {
+    recomputeWorkStress();
+    if (currentLayer === "overlooked") redraw();
   });
 
   redraw();

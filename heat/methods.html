@@ -288,14 +288,63 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
     </p>
     <p>
       The 11am&ndash;5pm window is the <strong>union</strong> of the
-      audited state Heat Action Plan windows (Odisha starts 11:00, Gujarat
-      ends 17:00; IMD's national advice is 12&ndash;3; Andhra Pradesh
-      12&ndash;4). Using the widest window makes the overlooked-hours count
-      a <em>conservative lower bound</em>: an hour flagged as overlooked
-      falls outside even the most generous version of the guidance, so
-      under any actual (narrower) state window the count could only be
-      higher. No per-state window data is claimed &mdash; that is deferred
-      to a later version.
+      documented outdoor-work windows in the table below: the earliest start
+      any of them uses (Odisha, 11:00) to the latest end (Delhi and
+      Ahmedabad, 17:00). Using that union makes the overlooked-hours count a
+      <em>conservative lower bound</em>: an hour flagged as overlooked falls
+      outside <em>every</em> one of these documented windows, so under any
+      single state's (narrower) window the count could only be higher. The
+      claim is scoped to the windows audited here, not to every HAP in
+      India; per-city matching to each city's own state HAP is deferred to a
+      later version.
+    </p>
+
+    <h3>The afternoon-avoidance windows, as written</h3>
+    <p>
+      Each row is a verbatim quotation from the primary document, with the
+      page or section where it appears. All are outdoor-worker /
+      labour-rescheduling provisions except the first, which is the
+      national do's-and-don'ts line reproduced across HAPs.
+    </p>
+    <div class="table-scroll">
+    <table class="method-table">
+      <thead><tr><th>Jurisdiction / document</th><th>Window</th><th>Exact wording (source)</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>NDMA / IMD national do's &amp; don'ts</td>
+          <td>avoid<br>12&ndash;3&nbsp;pm</td>
+          <td>&ldquo;Avoid going out in the sun, especially between 12.00 noon and 3.00 p.m.&rdquo; &mdash; standard NDMA/IMD advisory, reproduced verbatim in the <a href="https://ddma.delhi.gov.in/sites/default/files/ddma/generic_multiple_files/final_hap_12.04.2024.pdf">DDMA Delhi HAP 2024&ndash;25</a>, p.&nbsp;54.</td>
+        </tr>
+        <tr>
+          <td>Odisha &mdash; OSDMA Heat Action Plan 2018, Ch.&nbsp;3 (SOP)</td>
+          <td>work 6&ndash;11&nbsp;am &amp; 3:30&ndash;6&nbsp;pm<br>(avoid 11&nbsp;am&ndash;3:30&nbsp;pm)</td>
+          <td>&ldquo;The working hours for daily labourers need to be re-scheduled i.e. from 6 a.m. to 11 a.m. and 3.30 pm to 6 pm.&rdquo; (<a href="https://www.osdma.org/heat-wave/">OSDMA</a>; accessed via a document mirror as the OSDMA PDF did not serve directly.)</td>
+        </tr>
+        <tr>
+          <td>Andhra Pradesh &mdash; APSDMA Heat Wave Action Plan 2020</td>
+          <td>avoid<br>12&ndash;4&nbsp;pm</td>
+          <td>&ldquo;Encourage employers to shift outdoor workers schedules away from peak afternoon hours (12 &ndash; 4pm) during a heat alert.&rdquo; &mdash; <a href="https://apsdma.ap.gov.in/latestupdate_pdfs/heatwave/Heat_Wave_Action_Plan_2020.pdf">APSDMA HAP 2020</a>, p.&nbsp;36.</td>
+        </tr>
+        <tr>
+          <td>Ahmedabad (Gujarat) &mdash; AMC Heat Action Plan, 2019 Update</td>
+          <td>avoid<br>1&ndash;5&nbsp;pm</td>
+          <td>&ldquo;Change working hours of labourers. Encourage employers to shift outdoor workers' schedules away from peak afternoon hours (1pm &ndash; 5pm) during a heat alert.&rdquo; &mdash; <a href="https://www.nrdc.org/sites/default/files/ahmedabad-heat-action-plan-2019-update.pdf">Ahmedabad HAP 2019 Update</a>, p.&nbsp;17.</td>
+        </tr>
+        <tr>
+          <td>Delhi &mdash; DDMA Heat Action Plan 2024&ndash;25</td>
+          <td>work 7&nbsp;am&ndash;1&nbsp;pm &amp; 4&ndash;6&nbsp;pm<br>(avoid 1&ndash;5&nbsp;pm)</td>
+          <td>&ldquo;Encourage employers to shift outdoor workers' schedules away from peak afternoon hours (1pm&ndash;5pm) during Heat alert. Working Hours will be from 7:00am to 1:00pm, 4:00pm to 6:00pm.&rdquo; &mdash; <a href="https://ddma.delhi.gov.in/sites/default/files/ddma/generic_multiple_files/final_hap_12.04.2024.pdf">DDMA Delhi HAP 2024&ndash;25</a>, p.&nbsp;34.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="caveat">
+      Windows are stated as clock hours; the dashboard's hourly cells are
+      labelled by the hour they begin in IST, and Open-Meteo's solar input
+      for an hour is the mean over the preceding hour &mdash; so a cell at,
+      say, 5&nbsp;pm reflects roughly 4&ndash;5&nbsp;pm conditions. Boundary
+      hours can therefore shift a count by an hour either way; the headline
+      figure should be read as approximate, not to-the-hour exact.
     </p>
     <p class="caveat">
       Which cities have the most overlooked hours changes day to day with

@@ -2,8 +2,13 @@ name: Update heat data
 
 on:
   schedule:
-    # Every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC
-    - cron: "0 */6 * * *"
+    # Every 3 hours. GitHub's scheduled runs are best-effort and frequently
+    # delayed or dropped under load, so we run more often than the ~9h stale
+    # threshold the frontend warns at -- if one cycle is skipped, the next
+    # still lands well inside the window. Free on public repos (unlimited
+    # Actions minutes), and one Open-Meteo call per run stays far under the
+    # 10k/day free tier.
+    - cron: "0 */3 * * *"
   workflow_dispatch: {}  # lets us trigger a run manually from the Actions tab
 
 permissions:

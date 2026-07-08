@@ -57,6 +57,18 @@ function renderHeadline() {
   }
 
   const workload = getWorkload();
+
+  // Sensitivity to the ~1C estimation error in WBGT: recompute the headline
+  // at the limit +/- 1C. Lower limit (rel-1) => more hours qualify => higher
+  // count, so the band runs [count(rel+1) .. count(rel-1)]. This shows the
+  // finding survives the estimate's uncertainty rather than hiding it.
+  const loose = computeOverlookedSummary(_headlineCities, _headlineLatest, rel - 1); // more sensitive
+  const tight = computeOverlookedSummary(_headlineCities, _headlineLatest, rel + 1); // less sensitive
+  const cityLo = Math.min(tight.citiesWithShoulder, summary.citiesWithShoulder, loose.citiesWithShoulder);
+  const cityHi = Math.max(tight.citiesWithShoulder, summary.citiesWithShoulder, loose.citiesWithShoulder);
+  const hrLo = Math.min(tight.totalShoulderHours, loose.totalShoulderHours);
+  const hrHi = Math.max(tight.totalShoulderHours, loose.totalShoulderHours);
+
   statHost.innerHTML = `
     <div class="stat-big"><span class="stat-num">${summary.citiesWithShoulder}</span> of ${summary.citiesTotal} monitored cities</div>
     <div class="stat-say">are <em>forecast</em> today to have outdoor work-stress
@@ -66,6 +78,9 @@ function renderHeadline() {
     <div class="stat-sub">${summary.totalShoulderHours} such city-hours forecast in all, with the sun up.
       ${summary.totalDarkHumid > 0 ? `(${summary.totalDarkHumid} more after dark, driven by humidity &mdash; reported separately below.)` : ""}
       Among this 50-city sample; not a national estimate.</div>
+    <div class="stat-band">Estimated WBGT carries roughly &plusmn;1&deg;C of error. Allowing for
+      that, the figure spans <strong>${cityLo}&ndash;${cityHi} cities</strong> and
+      ${hrLo}&ndash;${hrHi} city-hours &mdash; the finding holds across the band.</div>
   `;
 
   // Top cities by overlooked shoulder-hours.

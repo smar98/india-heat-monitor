@@ -160,6 +160,36 @@ async function initMap() {
     markers.push({ record, marker });
   }
 
+  function renderLegend() {
+    const host = document.getElementById("map-legend");
+    if (!host) return;
+    let stops;
+    if (currentLayer === "overlooked") {
+      const maxCount = Math.max(1, ...[...workStressById.values()].map((w) => w.shoulder));
+      const vals = [0, Math.max(1, Math.round(maxCount / 3)), Math.max(2, Math.round((2 * maxCount) / 3)), maxCount];
+      stops = vals.map((v) => ({
+        label: v === 0 ? "0 hr" : `${v} hr`,
+        color: colorForOverlooked(v, maxCount),
+        r: 5 + Math.min(11, v * 1.4),
+      }));
+      host.innerHTML = `<span>Overlooked hours (outside 11&ndash;5, sun up):</span>` + legendItems(stops);
+    } else if (currentLayer === "wetbulb") {
+      const vals = [minWetBulb, (minWetBulb + maxWetBulb) / 2, maxWetBulb];
+      stops = vals.map((v) => ({ label: `${v.toFixed(0)}°C`, color: colorForSequential(v, minWetBulb, maxWetBulb), r: 7 }));
+      host.innerHTML = `<span>Current wet-bulb:</span>` + legendItems(stops);
+    } else {
+      const vals = [-maxAbsAnomaly, 0, maxAbsAnomaly];
+      stops = vals.map((v) => ({ label: `${v >= 0 ? "+" : ""}${v.toFixed(1)}°C`, color: colorForAnomaly(v, maxAbsAnomaly), r: 7 }));
+      host.innerHTML = `<span>Wet-bulb vs. normal:</span>` + legendItems(stops);
+    }
+  }
+
+  function legendItems(stops) {
+    return stops.map((s) =>
+      `<span class="legend-item"><span class="legend-dot" style="width:${(s.r * 2).toFixed(0)}px;height:${(s.r * 2).toFixed(0)}px;background:${s.color};"></span>${s.label}</span>`
+    ).join("");
+  }
+
   function redraw() {
     for (const { record, marker } of markers) {
       const style = styleFor(record);
@@ -169,6 +199,7 @@ async function initMap() {
     document.querySelectorAll(".layer-controls button").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.layer === currentLayer);
     });
+    renderLegend();
   }
 
   document.querySelectorAll(".layer-controls button").forEach((btn) => {

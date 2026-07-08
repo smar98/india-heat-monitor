@@ -497,6 +497,39 @@ section > p.section-note {
   max-width: 80ch;
 }
 
+.method-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75rem 0;
+  font-size: 0.85rem;
+}
+
+.method-table th, .method-table td {
+  border: 1px solid var(--rule);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.method-table th {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #efebe0;
+}
+
+.stale-warning {
+  margin-top: 0.7rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3e2c8;
+  border: 1px solid #b3401f;
+  border-left-width: 4px;
+  color: #7a2b12;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
 footer {
   margin-top: 2.5rem;
   padding-top: 1rem;

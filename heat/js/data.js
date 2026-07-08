@@ -145,7 +145,7 @@ function formatIstDateLong(dateKey) {
 // Workload levels + the REL work-stress threshold that depends on them.
 //
 // The NIOSH REL/RAL limits are not single numbers -- they slide with how hard
-// the work is (heavier work => lower safe WBGT). Metabolic rates follow the
+// the work is (heavier work => lower WBGT limit). Metabolic rates follow the
 // ISO 8996 activity classes (average W/m^2 x a standard ~1.8 m^2 worker).
 // Occupation examples are ILLUSTRATIVE task intensities, not fixed per-job
 // values -- the same job spans a wide range depending on the specific task.
@@ -157,11 +157,17 @@ function formatIstDateLong(dateKey) {
 function nioshRelC(m) { return 56.7 - 11.5 * Math.log10(m); }
 function nioshRalC(m) { return 59.9 - 14.1 * Math.log10(m); }
 
+// Metabolic rates on the NIOSH kcal/h basis (NIOSH DHHS 2016-106's own
+// worked example uses 300 kcal/h for moderate work), converted at
+// 1 kcal/h = 1.163 W, so the frontend, the methods page, and scripts/wbgt.py
+// all use ONE workload scale. Occupation examples are illustrative task
+// intensities, not fixed per-job values.
+//   light 180 kcal/h -> 209 W | moderate 300 -> 349 | heavy 400 -> 465 | very heavy 500 -> 581
 const WORKLOAD_LEVELS = [
-  { key: "light",     label: "Light",      watts: 200, examples: "standing supervision, light assembly" },
-  { key: "moderate",  label: "Moderate",   watts: 300, examples: "brisk walking with a load, street vending" },
-  { key: "heavy",     label: "Heavy",      watts: 415, examples: "digging, brick-carrying, most farm labour" },
-  { key: "very-high", label: "Very heavy", watts: 520, examples: "sustained shovelling, peak harvest / construction bursts" },
+  { key: "light",     label: "Light",      watts: 209, examples: "standing supervision, light assembly" },
+  { key: "moderate",  label: "Moderate",   watts: 349, examples: "brisk walking with a load, street vending" },
+  { key: "heavy",     label: "Heavy",      watts: 465, examples: "digging, brick-carrying, most farm labour" },
+  { key: "very-high", label: "Very heavy", watts: 581, examples: "sustained shovelling, peak harvest / construction bursts" },
 ];
 const DEFAULT_WORKLOAD_KEY = "heavy"; // the outdoor laborers this whole story is about
 

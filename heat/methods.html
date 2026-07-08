@@ -29,8 +29,8 @@
     <p class="section-note">
       India's Heat Action Plans tell outdoor workers to avoid the afternoon
       (roughly 11am&ndash;5pm across states) and shift work to the morning
-      and evening. This dashboard asks: how often do those "safer" shoulder
-      hours themselves cross the occupational heat-stress limit, once
+      and evening. This dashboard asks: how often do those shifted-to
+      shoulder hours themselves cross the occupational heat-stress limit, once
       humidity, sun, and wind are counted? A prior-art review (see the
       repository's <code>existing_tools_research.md</code>) found serious
       tools for occupational heat stress, thermal-comfort datasets, and
@@ -179,11 +179,38 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
     <p>
       where M is the 1-hour time-weighted-average metabolic rate, in
       watts, for a "standard" 70kg/1.8m&sup2; worker doing continuous
-      (60 min/h) work. This dashboard evaluates both formulas at a
-      representative <strong>moderate</strong> workload (300 kcal/h
-      &asymp; 349W &mdash; the same value NIOSH's own worked example in
-      the document uses), giving reference lines around 24.05&deg;C (RAL)
-      and 27.46&deg;C (REL).
+      (60 min/h) work. The dashboard's workload selector uses four levels
+      on NIOSH's own kcal/h basis (converted at 1 kcal/h = 1.163 W), and
+      reports the <strong>REL</strong> (acclimatized) line by default. The
+      same four values are used in the frontend, on this page, and in
+      <code>scripts/wbgt.py</code>:
+    </p>
+    <table class="method-table">
+      <thead><tr><th>Workload</th><th>Metabolic rate</th><th>REL (&deg;C WBGT)</th><th>Illustrative task</th></tr></thead>
+      <tbody>
+        <tr><td>Light</td><td>180 kcal/h &asymp; 209 W</td><td>30.0</td><td>standing supervision, light assembly</td></tr>
+        <tr><td>Moderate</td><td>300 kcal/h &asymp; 349 W</td><td>27.5</td><td>brisk walking with a load, street vending</td></tr>
+        <tr><td>Heavy <em>(default)</em></td><td>400 kcal/h &asymp; 465 W</td><td>26.0</td><td>digging, brick-carrying, most farm labour</td></tr>
+        <tr><td>Very heavy</td><td>500 kcal/h &asymp; 581 W</td><td>24.9</td><td>sustained shovelling, peak harvest/construction</td></tr>
+      </tbody>
+    </table>
+    <p>
+      The moderate row (349&nbsp;W &rarr; REL 27.5&deg;C) is the exact
+      value NIOSH's own worked example uses. Occupation labels are
+      <em>illustrative task intensities</em>, not fixed per-job values &mdash;
+      the same job spans a wide range depending on the specific task.
+      <strong>Why REL, not RAL:</strong> India's outdoor laborers are among
+      the most chronically heat-acclimatized workers anywhere, and Indian
+      occupational-health field studies measured real heat strain
+      (core-temperature rise, dehydration markers) in such workers around
+      these WBGT limits &mdash; so the acclimatized line is the defensible
+      default, and RAL would understate their tolerance. See Venugopal et
+      al., "Occupational Heat Stress Profiles in Selected Workplaces in
+      India," <em>Int. J. Environ. Res. Public Health</em>, 2016
+      (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4730480/">PMC4730480</a>),
+      and related work on heat strain in Tamil Nadu salt-pan and
+      agricultural workers
+      (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10334398/">PMC10334398</a>).
     </p>
     <p class="caveat">
       These are NOT flat "safe/danger" cutoffs. They vary continuously

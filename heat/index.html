@@ -18,14 +18,16 @@
       India's heat guidance tells outdoor workers to avoid the afternoon and
       shift work to the morning and evening. But bodies strain from humidity,
       sun, and wind &mdash; not the clock &mdash; and on hot days those
-      shoulder hours cross the heat-stress limit too. This dashboard shows,
-      live and city by city, how often the "safer" hours aren't.
+      shoulder hours can exceed the occupational heat-stress reference limit
+      too. This dashboard shows, live and city by city, how often the
+      "shifted-to" hours cross that line.
     </p>
     <div class="meta-row">
       <span>Data updated: <span id="data-updated">loading&hellip;</span></span>
       <span><a href="methods.html">Methods &amp; sources</a></span>
       <span><a href="https://github.com/smar98/india-heat-monitor">Source code</a></span>
     </div>
+    <div id="stale-warning" class="stale-warning" hidden></div>
   </header>
 
   <details class="explainer">
@@ -47,11 +49,12 @@
         <strong>What this dashboard does.</strong> For ~50 large Indian
         cities it estimates WBGT &mdash; an occupational heat-stress metric
         that folds humidity, sun, and wind into one number &mdash; hour by
-        hour, and counts the hours that cross the safe-work limit
-        <em>outside</em> the afternoon window guidance says to avoid. Those
-        overlooked morning and evening hours are the finding: the "shift
-        your work to the shoulders" advice can send workers into hours that
-        aren't actually safe.
+        hour, and counts the hours that exceed the NIOSH heat-stress
+        reference limit <em>outside</em> the afternoon window guidance says
+        to avoid. Those overlooked morning and evening hours are the
+        finding: the "shift your work to the shoulders" advice can send
+        workers into hours that carry higher heat-stress risk than the
+        limit allows.
       </p>
       <p>
         <strong>Why WBGT, if India doesn't use it officially?</strong>
@@ -65,7 +68,7 @@
       </p>
       <p>
         <strong>What to look for.</strong> Pick a workload &mdash; heavier
-        work has a lower safe limit &mdash; and read the headline count of
+        work has a lower heat-stress limit &mdash; and read the headline count of
         cities with overlooked hours today. The map sizes each city by how
         many, and the workday clock shows one city hour by hour, with the
         afternoon window shaded and the overlooked shoulder hours in dark
@@ -109,9 +112,10 @@
     <p class="section-note">
       India's heat guidance tells outdoor workers to avoid the afternoon and
       shift work to the morning and evening. But on hot days those shoulder
-      hours themselves cross the heat-stress limit &mdash; so the advice can
-      send people into hours that aren't actually safe. Pick a workload and
-      see how often that happens today, live.
+      hours themselves exceed the occupational heat-stress limit &mdash; so
+      the advice can send people into hours that carry higher risk than the
+      limit allows. Pick a workload and see how often that is forecast to
+      happen today.
     </p>
     <div id="workload-controls" class="workload-controls"></div>
     <div class="headline-flex">

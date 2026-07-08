@@ -188,6 +188,20 @@ async function initMap() {
 
   const generatedDate = new Date(latest.generated_at_utc);
   document.getElementById("data-updated").textContent = generatedDate.toUTCString();
+
+  // Stale-data guard. The pipeline targets every 6 hours, but GitHub Actions
+  // scheduled runs are best-effort and can be delayed or dropped, and a
+  // missed run leaves the last-good data in place with no server-side signal.
+  // So the browser checks the data's actual age and warns if it's older than
+  // ~9h (i.e. we've likely missed at least one 6-hour cycle).
+  const ageHours = (Date.now() - generatedDate.getTime()) / 3600000;
+  const warnEl = document.getElementById("stale-warning");
+  if (warnEl && ageHours > 9) {
+    warnEl.hidden = false;
+    warnEl.textContent =
+      `⚠ Data is ${Math.round(ageHours)} hours old (target refresh is every 6 hours). ` +
+      `Automated updates can lag; the figures below may not reflect the latest forecast.`;
+  }
 }
 
 initMap().catch((err) => {

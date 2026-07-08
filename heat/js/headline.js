@@ -5,7 +5,7 @@
  * shift work to the morning and evening. This section shows, live, how often
  * those shoulder hours THEMSELVES cross the acclimatized heat-stress limit
  * (REL) for the selected workload -- i.e. the guidance sends workers into
- * hours that aren't actually safe. That is the dashboard's central,
+ * hours that exceed the heat-stress reference limit. That is the dashboard's central,
  * empirically-verified claim.
  *
  * It owns the workload selector (via setWorkload in data.js), which the
@@ -58,13 +58,14 @@ function renderHeadline() {
 
   const workload = getWorkload();
   statHost.innerHTML = `
-    <div class="stat-big"><span class="stat-num">${summary.citiesWithShoulder}</span> of ${summary.citiesTotal} cities</div>
-    <div class="stat-say">have outdoor work-stress hours today that fall in the
-      morning or evening &mdash; <em>outside</em> the afternoon window
-      (11am&ndash;5pm) that guidance says to avoid &mdash; for
+    <div class="stat-big"><span class="stat-num">${summary.citiesWithShoulder}</span> of ${summary.citiesTotal} monitored cities</div>
+    <div class="stat-say">are <em>forecast</em> today to have outdoor work-stress
+      hours in the morning or evening &mdash; <em>outside</em> the afternoon
+      window (11am&ndash;5pm) that guidance says to avoid &mdash; for
       <strong>${workload.label.toLowerCase()}</strong> work.</div>
-    <div class="stat-sub">${summary.totalShoulderHours} such city-hours in all, with the sun up.
-      ${summary.totalDarkHumid > 0 ? `(${summary.totalDarkHumid} more after dark, driven by humidity &mdash; reported separately below.)` : ""}</div>
+    <div class="stat-sub">${summary.totalShoulderHours} such city-hours forecast in all, with the sun up.
+      ${summary.totalDarkHumid > 0 ? `(${summary.totalDarkHumid} more after dark, driven by humidity &mdash; reported separately below.)` : ""}
+      Among this 50-city sample; not a national estimate.</div>
   `;
 
   // Top cities by overlooked shoulder-hours.

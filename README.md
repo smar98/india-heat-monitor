@@ -1,19 +1,53 @@
-# India Humid Heat Monitor
+# India Outdoor Heat Stress Monitor
 
-A live dashboard tracking which Indian cities look less dangerous on ordinary
-dry-bulb air-temperature rankings but become high-risk once humidity,
-radiant heat, and time-of-day are accounted for.
+A live dashboard showing where India's fixed "avoid the afternoon" work-hour
+guidance overlooks outdoor heat stress. India's Heat Action Plans tell
+outdoor workers to shift work to the morning and evening; on hot days those
+shoulder hours themselves can exceed the occupational heat-stress limit. This
+dashboard estimates that, live, for ~50 large Indian cities.
 
-Public heat communication in India is largely anchored to dry-bulb
-temperature. This dashboard keeps three metrics strictly separate — dry-bulb
-temperature, wet-bulb temperature (Stull 2011 approximation), and estimated
-WBGT (Liljegren-type method) for outdoor work-risk bands — and updates on a
-schedule from free public weather data (Open-Meteo).
+**Live site:** https://smar98.github.io/india-heat-monitor/heat/
 
-See `existing_tools_research.md` for the prior-art review that shaped this
-project's scope, and `heat/methods.html` (once built) for full methodology,
-sources, and caveats.
+## What it does
 
-Data pipeline runs via GitHub Actions every 6 hours. Site is static, hosted
-on GitHub Pages, built with plain HTML/CSS/JS (no build step) plus Python
-scripts for data fetching.
+For each city, every forecast hour is scored against the NIOSH REL
+occupational heat-stress reference limit (for a selectable workload) using
+estimated **WBGT** (Wet Bulb Globe Temperature) — a metric that folds
+humidity, solar radiation, and wind into one number, unlike the maximum air
+temperature that IMD heat-wave declarations rest on. The headline counts the
+**overlooked hours**: hours that exceed the limit *outside* the 11am–5pm
+afternoon-avoidance window (the union of audited state HAP windows, used as a
+conservative bound), with the sun up.
+
+Three metrics are kept strictly separate and never compared against each
+other's thresholds:
+
+- **Wet-bulb temperature** — Stull (2011) approximation, from temperature and
+  humidity.
+- **Estimated WBGT** — a Python port of James Liljegren's (2008) reference
+  model, verified numerically against the original author's compiled C code
+  (see `tests/`).
+- **NIOSH RAL/REL limits** — the occupational heat-stress reference lines,
+  reported for acclimatized workers (REL) as the defensible default for
+  India's chronically heat-exposed outdoor laborers.
+
+Language discipline: the site says "exceeds the NIOSH heat-stress reference
+limit," never "safe hours."
+
+## How it's built
+
+- Static site: plain HTML/CSS/JS, no build step. Hosted on GitHub Pages.
+- Data: Open-Meteo Forecast API (no key). A GitHub Actions workflow targets a
+  refresh every 6 hours; scheduled runs are best-effort, so the page shows a
+  stale-data warning if the data is more than ~9 hours old.
+- 1991–2020 climatological normals (ERA5) are computed once for the map's
+  anomaly layer.
+
+See `existing_tools_research.md` for the prior-art review, `heat/methods.html`
+for full methodology, sources, validity ranges, and caveats, and
+`BUILD_LOG.md` for the build history and decisions.
+
+> Framing note: this is an exploratory, transparent, live policy dashboard
+> highlighting a plausible blind spot in fixed work-hour guidance — not
+> validated occupational-exposure evidence. Figures are forecast, on a ~25km
+> grid, for a 50-city sample, and are not a national estimate.

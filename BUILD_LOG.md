@@ -1,4 +1,4 @@
-# Build Log — India Humid Heat Monitor
+# Build Log — The Overlooked Hours (formerly India Humid Heat Monitor)
 
 A running record of how this dashboard was built and why, kept alongside
 the code so the reasoning isn't lost. See `existing_tools_research.md` for

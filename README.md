@@ -1,4 +1,4 @@
-# India Outdoor Heat Stress Monitor
+# The Overlooked Hours — India outdoor-work heat stress
 
 A live dashboard showing where India's fixed "avoid the afternoon" work-hour
 guidance overlooks outdoor heat stress. India's Heat Action Plans tell

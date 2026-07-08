@@ -1,5 +1,5 @@
 /*
- * Shared data loading and computation for the India Humid Heat Monitor.
+ * Shared data loading and computation for "The Overlooked Hours".
  * Used by every view (headline, map, chart, workday clock) so they can
  * never disagree about how a number was computed.
  *

@@ -44,8 +44,15 @@ header.masthead .kicker {
 
 header.masthead h1 {
   font-size: 1.9rem;
-  margin: 0.15rem 0 0.35rem;
+  margin: 0.15rem 0 0.15rem;
   font-weight: 600;
+}
+
+header.masthead .subtitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  color: var(--accent-danger);
+  font-style: italic;
 }
 
 header.masthead p.dek {

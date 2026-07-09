@@ -5,3 +5,6 @@ __pycache__/
 venv/
 .pytest_cache/
 .claude/
+
+# Local-only context/handoff doc — must NOT be published to the public repo
+HANDOFF.md

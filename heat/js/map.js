@@ -102,7 +102,9 @@ async function initMap() {
     maxZoom: 9,
     maxBounds: [[4, 58], [41, 108]],
     attributionControl: true,
+    zoomControl: false, // re-added top-right so popups near the top-left corner never sit under it
   }).setView([22.5, 80], 5);
+  L.control.zoom({ position: "topright" }).addTo(map);
   map.attributionControl.setPrefix(false);
   map.attributionControl.addAttribution(
     'Boundaries: <a href="https://github.com/datameet/maps">DataMeet</a> (MIT)');

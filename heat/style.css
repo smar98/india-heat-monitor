@@ -189,6 +189,19 @@ details.explainer[open] summary { border-bottom: 1px solid var(--line); color: v
 .wbtn.on { border-color: var(--orange); background: rgba(224,113,58,.12); color: var(--ink-hi); }
 .wbtn.on .rel { color: var(--orange-mid); }
 .wbtn:hover:not(.on) { border-color: #3a424d; }
+.wbtn .info { color: var(--ink-5); font-size: 11px; }
+.wbtn:hover .info, .wbtn:focus-visible .info { color: var(--orange-mid); }
+/* hover/focus explainer card, fed by data-tip (what "heavy work" etc. means) */
+.wbtn { position: relative; }
+.wbtn:hover::after, .wbtn:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 1200;
+  width: 240px; padding: 9px 11px;
+  background: var(--bg-deep); border: 1px solid var(--line-2); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.55);
+  font-size: 11.5px; line-height: 1.45; color: var(--ink-2);
+  white-space: normal; text-align: left; pointer-events: none;
+}
 .layer-btn {
   display: flex; align-items: center; gap: 9px; padding: 8px 10px;
   border-radius: 8px; background: var(--chip); border: 1px solid var(--line-2);
@@ -320,6 +333,18 @@ details.explainer[open] summary { border-bottom: 1px solid var(--line); color: v
 .sens .srow.on .sh { color: var(--ink-hi); font-weight: 600; }
 .sens .cnt { font-family: var(--font-display); font-weight: 700; letter-spacing: -.01em; }
 .sens-note { font-size: 10.5px; color: var(--ink-5); font-family: var(--font-mono); padding: 0 15px 13px; margin: 0; }
+
+/* ------------------------------------------------------- trend panel */
+
+.trend-row { margin-top: 16px; }
+.trend-body { padding: 14px 15px 13px; }
+.trend-tick {
+  font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-5);
+}
+.trend-caveat {
+  font-family: var(--font-mono); font-size: 10px; color: var(--ink-5);
+  margin: 10px 0 0; max-width: 92ch;
+}
 
 /* ---------------------------------------------------------- fine print */
 

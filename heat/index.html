@@ -8,9 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<!-- leaflet.css must load BEFORE style.css so our dark popup/control
+     overrides (equal specificity) win the cascade. -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -32,9 +34,10 @@
       heat-stress limit in <em id="hl-count">&hellip;</em> cities today</h1>
     <p class="dek" id="headline-dek">
       "Avoid the afternoon, work the morning and evening" &mdash; but on hot
-      days those shoulder hours themselves exceed the NIOSH heat-stress
-      reference limit. This dashboard counts them live, per city, per
-      workload, from forecast data.
+      days those morning and evening hours cross the point above which, per
+      NIOSH, sustained outdoor work risks heating the body faster than it
+      can cool itself. The risk isn't removed &mdash; it's relocated to the
+      very hours the advice recommends.
     </p>
 
     <div id="stale-warning" class="stale-warning" hidden></div>
@@ -135,8 +138,8 @@
           <button type="button" class="layer-btn" data-layer="anomaly"><span class="d" style="background:#7fb0a3"></span>Anomaly vs. normal</button>
         </div>
         <div class="rl" style="margin-top:10px">Coming</div>
-        <div class="layer-soon"><span class="d"></span>District exposure<span class="tag">Soon</span></div>
-        <div class="layer-soon"><span class="d"></span>1980&ndash;2025 trend<span class="tag">Soon</span></div>
+        <div class="layer-soon"><span class="d"></span>District-level heat, all India<span class="tag">Soon</span></div>
+        <div class="layer-soon"><span class="d"></span>Outdoor workers at risk<span class="tag">Soon</span></div>
       </div>
 
       <div class="panel">
@@ -181,6 +184,26 @@
 
     </div>
 
+    <div class="panel trend-row" id="trend-panel">
+      <div class="ph"><h3>The long view &mdash; has the blind spot grown?</h3><span class="t" id="trend-panel-tag">ERA5 &middot; 1980&ndash;2024</span></div>
+      <div class="trend-body">
+        <div id="trend-chart"><p class="empty" style="padding:12px 2px;">Loading 45 years of history&hellip;</p></div>
+        <p class="clock-city-note" id="trend-note" style="padding:0;"></p>
+        <p class="trend-caveat">
+          ERA5 reanalysis (~25&thinsp;km grid), hours per year exceeding the
+          NIOSH REL for the selected workload outside the current
+          11am&ndash;5pm avoidance window, daylight only &mdash; the same
+          definition and code path as today's count, applied to
+          1980&ndash;2024. The avoidance window is <em>today's</em> audited
+          guidance applied to past years; 2025 is excluded as incomplete.
+          Historical reanalysis and the live forecast are different data
+          products &mdash; never read this chart against today's numbers.
+          Model estimates, not observations. Same city and workload as
+          selected above.
+        </p>
+      </div>
+    </div>
+
     <div class="fine-print">
       &ldquo;Outside the window&rdquo; uses 11am&ndash;5pm &mdash; the widest
       afternoon-avoidance window any audited state Heat Action Plan uses
@@ -221,5 +244,6 @@
 <script src="js/headline.js"></script>
 <script src="js/map.js"></script>
 <script src="js/workday-clock.js"></script>
+<script src="js/trend.js"></script>
 </body>
 </html>

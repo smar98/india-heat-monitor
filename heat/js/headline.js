@@ -25,8 +25,16 @@ function renderWorkloadRail() {
     btn.type = "button";
     btn.dataset.workload = w.key;
     btn.className = "wbtn" + (w.key === current.key ? " on" : "");
-    btn.title = `${w.label} work (~${w.watts} W): ${w.examples}`;
-    btn.innerHTML = `${w.label}<span class="rel">${nioshRelC(w.watts).toFixed(1)}&deg;</span>`;
+    // Visible-on-hover/focus explainer (the ⓘ): what this intensity means
+    // in real tasks, and why the limit differs. CSS renders data-tip.
+    btn.dataset.tip =
+      `${w.label} work ≈ ${w.watts} W — e.g. ${w.examples}. ` +
+      `Heavier work makes more body heat, so the WBGT limit is lower ` +
+      `(${nioshRelC(w.watts).toFixed(1)}°C here).`;
+    btn.setAttribute("aria-label", `${w.label} work, about ${w.watts} watts: ${w.examples}`);
+    btn.innerHTML =
+      `<span class="wl">${w.label} <span class="info" aria-hidden="true">&#9432;</span></span>` +
+      `<span class="rel">${nioshRelC(w.watts).toFixed(1)}&deg;</span>`;
     btn.addEventListener("click", () => setWorkload(w.key));
     host.appendChild(btn);
   }
@@ -59,13 +67,18 @@ function renderHeadline() {
   const cityHi = Math.max(tight.citiesWithShoulder, summary.citiesWithShoulder, loose.citiesWithShoulder);
 
   countEl.textContent = `${summary.citiesWithShoulder} of ${summary.citiesTotal}`;
+  // The dek carries the so-what: crossing the limit means the body gains
+  // heat faster than it can shed it at that work intensity -- the advice
+  // relocates the risk into the recommended hours rather than removing it.
   document.getElementById("headline-dek").innerHTML =
     `"Avoid the afternoon, work the morning and evening" &mdash; but for ` +
-    `<strong>${workload.label.toLowerCase()}</strong> work ` +
-    `(limit ${rel.toFixed(1)}&deg;C estimated WBGT) those shoulder hours are ` +
-    `<em>forecast</em> to exceed the NIOSH heat-stress reference limit anyway. ` +
-    `Counted live, per city, per workload &mdash; among this 50-city sample, ` +
-    `not a national estimate.`;
+    `<strong>${workload.label.toLowerCase()}</strong> work, those morning and ` +
+    `evening hours are <em>forecast</em> to cross ${rel.toFixed(1)}&deg;C ` +
+    `estimated WBGT &mdash; the point above which, per NIOSH, sustained ` +
+    `${workload.label.toLowerCase()} work risks heating the body faster ` +
+    `than it can cool itself, even for workers used to the heat. The risk ` +
+    `isn't removed &mdash; it's relocated to the very hours the advice ` +
+    `recommends. Among this 50-city sample; not a national estimate.`;
 
   // KPI cards.
   document.getElementById("kpi-cities").innerHTML =

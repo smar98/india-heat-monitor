@@ -102,6 +102,7 @@ function renderTrend() {
   host.innerHTML = `
     <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img"
          aria-label="Overlooked hours per year in ${cityName}, 1980 to 2024">
+      <text x="${padL - 6}" y="${padT - 3}" text-anchor="end" class="trend-tick">hrs/yr</text>
       ${grid}${xticks}
       <polygon points="${band}" fill="rgba(224,113,58,.14)"/>
       <path d="${pathOf(ovl)}" fill="none" stroke="#ef8a4a" stroke-width="1.6"/>
@@ -111,16 +112,56 @@ function renderTrend() {
 
   if (tagEl) tagEl.textContent = `${cityName} · ERA5 · 1980–2024`;
 
-  // Plain-words takeaway: first vs last decade of the 10-yr mean.
+  // ---- The so-what, in human units. ----
+  // "Hours over the limit" means little raw; translate it: how many DAYS a
+  // year does this happen, and how much working time does it add up to
+  // (8-hour-workday equivalents)? The decade comparison is CLIMATE-only --
+  // same city, same workload, same 11-5 rule for all 45 years -- and the
+  // copy must say so, or "vs the 1980s" invites an economic reading the
+  // chart doesn't support.
+  const decadeMean = (arr, from, to) => {
+    const slice = arr.slice(from, to + 1);
+    return slice.reduce((s, v) => s + v, 0) / slice.length;
+  };
+  const lastIdx = years.length - 1;
+  const lateHours = decadeMean(ovl, lastIdx - 9, lastIdx);    // 2015-2024
+  const earlyHours = decadeMean(ovl, 0, 9);                   // 1980-1989
+  const lateDays = Math.round(decadeMean(days, lastIdx - 9, lastIdx));
+  const workdays = Math.round(lateHours / 8);                 // 8-hour-workday equivalents
+
+  const takeawayEl = document.getElementById("trend-takeaway");
+  if (takeawayEl) {
+    if (lateHours < 15) {
+      takeawayEl.innerHTML =
+        `For ${workload.label.toLowerCase()} work, this is rare in <strong>${cityName}</strong>: ` +
+        `morning and evening hours crossed the limit only ` +
+        `<strong>&asymp;${Math.round(lateHours)} hours a year</strong> over the last decade.`;
+    } else {
+      takeawayEl.innerHTML =
+        `Over the last decade in <strong>${cityName}</strong>, morning and evening work hours ` +
+        `crossed the heat-stress limit for ${workload.label.toLowerCase()} work on ` +
+        `<strong class="hot">&asymp;${lateDays} days a year</strong> &mdash; ` +
+        `<strong>&asymp;${Math.round(lateHours)} hours annually, the equivalent of ` +
+        `${workdays} eight-hour workdays</strong> spent over the limit in the very hours ` +
+        `the guidance recommends.`;
+    }
+  }
+
   if (noteEl) {
-    const early = Math.round(mean10[9]);          // mean of 1980-89
-    const late = Math.round(mean10[mean10.length - 1]); // mean of 2015-24
-    const delta = late - early;
-    const dir = delta > 0 ? `${delta} hours/year more than` : delta < 0 ? `${-delta} hours/year fewer than` : `about the same as`;
+    const pct = earlyHours >= 50 ? Math.round(((lateHours - earlyHours) / earlyHours) * 100) : null;
+    const deltaAbs = Math.round(lateHours - earlyHours);
+    let deltaText;
+    if (pct != null && Math.abs(pct) >= 5) {
+      deltaText = `That's <strong>${pct > 0 ? "up" : "down"} ~${Math.abs(pct)}%</strong> compared with the 1980s`;
+    } else if (pct != null) {
+      deltaText = `That's <strong>roughly unchanged</strong> since the 1980s`;
+    } else {
+      deltaText = `That's <strong>${deltaAbs >= 0 ? `${deltaAbs} hours/year more` : `${-deltaAbs} hours/year fewer`}</strong> than in the 1980s`;
+    }
     noteEl.innerHTML =
-      `In ${cityName}, the last decade averaged <strong>${late} overlooked hours a year</strong> ` +
-      `for ${workload.label.toLowerCase()} work &mdash; ${dir} the 1980s (${early}/yr). ` +
-      `Dashed line: 10-year mean. Shaded: the &plusmn;1&deg;C WBGT-error band.`;
+      `${deltaText} &mdash; and the comparison holds everything about the work constant: ` +
+      `same workload, same 11am&ndash;5pm rule, all 45 years. Only the weather differs, ` +
+      `so the change you see is climate, not economics or population.`;
   }
 }
 

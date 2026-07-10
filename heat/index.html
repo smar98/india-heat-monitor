@@ -186,8 +186,14 @@
     <div class="panel trend-row" id="trend-panel">
       <div class="ph"><h3>The long view &mdash; has the blind spot grown?</h3><span class="t" id="trend-panel-tag">ERA5 &middot; 1980&ndash;2024</span></div>
       <div class="trend-body">
+        <div class="trend-takeaway" id="trend-takeaway"></div>
+        <div class="trend-legend" id="trend-legend">
+          <span><span class="tl-swatch tl-line"></span>hours over the limit each year (mornings + evenings, sun up)</span>
+          <span><span class="tl-swatch tl-dash"></span>10-year average</span>
+          <span><span class="tl-swatch tl-band"></span>margin of error (&plusmn;1&deg;C WBGT)</span>
+        </div>
         <div id="trend-chart"><p class="empty" style="padding:12px 2px;">Loading 45 years of history&hellip;</p></div>
-        <p class="clock-city-note" id="trend-note" style="padding:0;"></p>
+        <p class="clock-city-note" id="trend-note" style="padding:0 0 0 0;"></p>
         <p class="trend-caveat">
           ERA5 reanalysis (~25&thinsp;km grid), hours per year exceeding the
           NIOSH REL for the selected workload outside the current

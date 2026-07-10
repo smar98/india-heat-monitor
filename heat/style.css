@@ -338,6 +338,18 @@ details.explainer[open] summary { border-bottom: 1px solid var(--line); color: v
 
 .trend-row { margin-top: 16px; }
 .trend-body { padding: 14px 15px 13px; }
+.trend-takeaway { font-size: 14.5px; color: var(--ink-2); max-width: 78ch; margin: 0 0 4px; }
+.trend-takeaway strong { color: var(--ink-hi); }
+.trend-takeaway .hot { color: var(--hot-soft); }
+.trend-legend {
+  display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+  margin: 8px 0 10px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--ink-3);
+}
+.tl-swatch { display: inline-block; vertical-align: middle; margin-right: 6px; }
+.tl-line { width: 18px; height: 0; border-top: 2px solid #ef8a4a; }
+.tl-dash { width: 18px; height: 0; border-top: 2px dashed rgba(242,244,247,.75); }
+.tl-band { width: 14px; height: 10px; background: rgba(224,113,58,.2); border-radius: 2px; }
 .trend-tick {
   font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-5);
 }

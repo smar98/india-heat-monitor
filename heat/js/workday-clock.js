@@ -36,8 +36,18 @@ let clockCities = [];
 let clockLatest = null;
 let clockSelectedCityId = null;
 
+/** The city currently selected in the shared selector (used by the trend
+ * chart, which shows the same city -- one "city view", one selector). */
+function getSelectedCityId() {
+  return clockSelectedCityId;
+}
+
 function renderWorkdayClock(cityId) {
+  const changed = clockSelectedCityId !== cityId;
   clockSelectedCityId = cityId;
+  if (changed) {
+    document.dispatchEvent(new CustomEvent("citychange", { detail: { cityId } }));
+  }
   const rel = getRelThreshold();
   const hourly = buildHourlySeriesForCity(cityId, clockLatest, rel);
   const container = document.getElementById("workday-clock");

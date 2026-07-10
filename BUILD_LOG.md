@@ -414,3 +414,52 @@ reanalysis is weakest in exactly the variables WBGT leans on — solar and wind.
 the sensitivity-band invariant, cold-hour handling, gap dropping); a real
 city-block smoke test before the full run; and in-browser rendering checked
 against a stand-in dataset while the full backfill ran.
+
+---
+
+## Step 12 — District layer: workers at risk (2026-07-10)
+
+The map gained its first all-India layer, built story-first: not "here is
+district weather" but "how many outdoor workers does the advice overlook,
+and where." Each of the 640 Census-2011 districts is shaded by
+worker-hours at risk today: its outdoor workforce times its forecast
+overlooked hours at the selected workload.
+
+**Workforce data** comes from Census 2011 table B-04 (main workers by
+industrial category), parsed per district from the Census bureau's own
+per-state files, counting the predominantly-outdoor categories (NIC A
+agriculture, B mining, F construction) — ~212 million main workers
+nationally, a deliberate under-count of outdoor exposure. Two integrity
+gates ran before anything shipped: each state's district counts must sum
+exactly to that state's own total row (all 35 states/UTs passed), and every
+mapped district must join a workforce record (640/640).
+
+**Heat data** is a new once-daily pipeline: one representative interior
+point per district (computed to be guaranteed inside the polygon —
+including repairing one invalid coastline geometry the simplification
+produced), fetched in 8 batched calls, scored with the same
+WBGT-vs-REL definition as everything else, and reduced to per-district
+aggregates only (~55KB; no hourly arrays). Its workflow validates the
+output (all districts present, plausible ranges) and refuses to commit
+otherwise; the layer labels its data date if a refresh is missed.
+
+**Boundaries:** DataMeet Census-2011 district shapefile, simplified ~10MB
+→ ~1MB with all 641 shapes retained (including the no-census-data Kashmir
+polygon, which renders as no-data rather than being dropped). The 2011
+frame is deliberate: the Census join is exact, and post-2011 districts
+appear within their parents.
+
+**UI:** a fourth map layer ("Workers at risk, by district") — quantile-
+binned choropleth (exposure is heavily right-skewed), plain-words popups
+("≈4.2M worker-hours forecast over the heat-stress limit in this
+district's shoulder hours today"), a legend in worker-hours, city dots
+hidden while the choropleth is up, lazy-loading so the default page pays
+nothing, and the 2011-vintage/one-grid-point caveats attached to the layer
+itself rather than buried. A methods section covers sources, licenses, the
+under-count direction, and why the shading ranks districts rather than
+measures them.
+
+**Verification:** 48 tests passing (3 new for the daily summarizer);
+integrity gates above; live fetch of all 640 districts; in-browser check
+of layer switching, workload re-binning (Light and Heavy produce different
+quantile scales), popup content, and city-dot restoration.

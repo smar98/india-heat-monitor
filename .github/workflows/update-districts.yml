@@ -1,0 +1,50 @@
+name: Update district daily heat
+
+on:
+  schedule:
+    # 01:30 UTC = 07:00 IST, once daily -- the day's forecast is fresh
+    # before Indian daylight hours. Scheduled runs are best-effort; the
+    # frontend labels the data with its IST date so a missed day reads as
+    # yesterday's, never silently as today's.
+    - cron: "30 1 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-districts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Run formula test suite
+        run: python3 -m pytest tests/ -q
+
+      - name: Fetch district daily heat summary
+        # The script validates its own output (all 640 districts present,
+        # plausible ranges) and exits non-zero otherwise, so a bad fetch
+        # can never overwrite good data.
+        run: python3 scripts/fetch_districts_daily.py
+
+      - name: Commit updated data if it changed
+        run: |
+          git config user.name "heat-monitor-bot"
+          git config user.email "actions@github.com"
+          git pull --rebase
+          git add heat/data/districts_daily.json
+          if git diff --cached --quiet; then
+            echo "No data changes, nothing to commit."
+          else
+            git commit -m "Update district daily heat: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git push
+          fi

@@ -35,6 +35,17 @@ const LAYER_DEFS = {
       "Today's peak wet-bulb minus the climatological normal peak wet-bulb " +
       "for this calendar date (1991-2020, Open-Meteo/ERA5).",
   },
+  districts: {
+    label: "Workers at risk, by district",
+    tag: "Districts · forecast today",
+    caption:
+      "Where the overlooked workers are: each district is shaded by " +
+      "worker-hours at risk today -- its outdoor workforce (farm, " +
+      "construction, and mining main workers, Census 2011) multiplied by " +
+      "today's overlooked morning/evening hours at the selected workload. " +
+      "Darker orange = more people spending more over-limit hours in the " +
+      "very hours guidance recommends.",
+  },
 };
 
 // Design-handoff map tokens.
@@ -214,10 +225,131 @@ async function initMap() {
     }
   }
 
+  // ------------------------------------------------------------------
+  // District layer: worker-hours at risk (Census 2011 outdoor workforce x
+  // today's overlooked hours). All three data files are lazy-loaded the
+  // first time the layer is switched on, so the default page load pays
+  // nothing for them.
+  // ------------------------------------------------------------------
+  let districtBundle = null;   // { geo, workers, daily }
+  let districtLoadPromise = null;
+  let districtLayer = null;    // the L.geoJSON layer, built once
+  let districtBins = [];       // exposure thresholds for the current workload
+
+  function loadDistrictBundle() {
+    if (!districtLoadPromise) {
+      districtLoadPromise = Promise.all([
+        fetch("data/india_districts_2011.geojson").then((r) => r.json()),
+        fetch("data/district_workers.json").then((r) => r.json()),
+        fetch("data/districts_daily.json").then((r) => r.json()),
+      ]).then(([geo, workers, daily]) => {
+        districtBundle = { geo, workers, daily };
+        return districtBundle;
+      });
+    }
+    return districtLoadPromise;
+  }
+
+  function districtInfo(code) {
+    const w = districtBundle.workers.districts[String(code)];
+    const d = districtBundle.daily.districts[String(code)];
+    if (!w || !d) return null;
+    const hours = d.o[getWorkload().key] || 0;
+    return { workers: w, hours, maxWbgt: d.max_wbgt, exposure: w.outdoor_workers * hours };
+  }
+
+  function fmtWorkerHours(x) {
+    if (x >= 1e6) return `${(x / 1e6).toFixed(1)}M`;
+    if (x >= 1e3) return `${Math.round(x / 1e3)}k`;
+    return String(Math.round(x));
+  }
+
+  function computeDistrictBins() {
+    const values = [];
+    for (const feat of districtBundle.geo.features) {
+      const info = districtInfo(feat.properties.censuscode);
+      if (info && info.exposure > 0) values.push(info.exposure);
+    }
+    values.sort((a, b) => a - b);
+    const q = (p) => values.length ? values[Math.min(values.length - 1, Math.floor(p * values.length))] : 0;
+    // Exposure is heavily right-skewed (a few huge rural districts), so the
+    // class breaks are quantiles of the NONZERO values, not equal steps.
+    districtBins = [q(0.4), q(0.7), q(0.9), q(0.98)];
+  }
+
+  const DISTRICT_COLORS = [warmRamp(0.12), warmRamp(0.42), warmRamp(0.7), warmRamp(0.88), warmRamp(1)];
+  const DISTRICT_ZERO = "#2a323c";
+  const DISTRICT_NODATA = "#20262c";
+
+  function districtColor(exposure) {
+    if (exposure <= 0) return DISTRICT_ZERO;
+    for (let i = 0; i < districtBins.length; i++) {
+      if (exposure <= districtBins[i]) return DISTRICT_COLORS[i];
+    }
+    return DISTRICT_COLORS[DISTRICT_COLORS.length - 1];
+  }
+
+  function districtStyle(feature) {
+    const info = districtInfo(feature.properties.censuscode);
+    return {
+      fillColor: info ? districtColor(info.exposure) : DISTRICT_NODATA,
+      fillOpacity: 1,
+      color: "#0f1216",
+      weight: 0.5,
+      opacity: 1,
+    };
+  }
+
+  function districtPopupHtml(feature) {
+    const p = feature.properties;
+    const info = districtInfo(p.censuscode);
+    if (!info) {
+      return `<div class="popup-city">${p.DISTRICT}</div>
+        <div class="popup-state">${p.ST_NM}</div>
+        <div class="popup-row" style="color:#8b95a1;font-size:11px;">No Census-2011 data for this area.</div>`;
+    }
+    const w = getWorkload();
+    const story = info.hours > 0
+      ? `<div class="popup-climb">&asymp;${fmtWorkerHours(info.exposure)} worker-hours forecast over the
+           heat-stress limit in this district's morning/evening shoulder hours today
+           (${w.label.toLowerCase()} work).</div>`
+      : `<div class="popup-row" style="color:#8b95a1;font-size:11px;">No overlooked hours forecast today at ${w.label.toLowerCase()} workload.</div>`;
+    return `
+      <div class="popup-city">${p.DISTRICT}</div>
+      <div class="popup-state">${p.ST_NM}</div>
+      <div class="popup-row"><span class="label">Outdoor workers (Census 2011)</span><span class="value">${fmtWorkerHours(info.workers.outdoor_workers)}</span></div>
+      <div class="popup-row"><span class="label">Overlooked hours today</span><span class="value">${info.hours} hr</span></div>
+      <div class="popup-row"><span class="label">Peak est. WBGT today</span><span class="value">${info.maxWbgt != null ? info.maxWbgt.toFixed(1) + "&deg;C" : "n/a"}</span></div>
+      ${story}
+    `;
+  }
+
+  function renderDistrictLayer() {
+    computeDistrictBins();
+    if (!districtLayer) {
+      districtLayer = L.geoJSON(districtBundle.geo, { style: districtStyle });
+      districtLayer.eachLayer((lyr) => lyr.bindPopup(() => districtPopupHtml(lyr.feature)));
+    } else {
+      districtLayer.setStyle(districtStyle);
+    }
+    districtLayer.addTo(map);
+  }
+
   function renderLegend() {
     const host = document.getElementById("map-legend");
     if (!host) return;
     let stops;
+    if (currentLayer === "districts") {
+      if (!districtBundle) { host.innerHTML = ""; return; }
+      const items = [{ label: "0", color: DISTRICT_ZERO }].concat(
+        districtBins.map((b, i) => ({ label: `&le;${fmtWorkerHours(b)}`, color: DISTRICT_COLORS[i] })),
+        [{ label: `&gt;${fmtWorkerHours(districtBins[districtBins.length - 1])}`, color: DISTRICT_COLORS[4] }]
+      );
+      host.innerHTML = `<span>Worker-hours at risk today:</span>` + items.map((s) =>
+        `<span class="legend-item"><span class="legend-dot" style="width:13px;height:13px;border-radius:3px;background:${s.color};"></span>${s.label}</span>`
+      ).join("");
+      return;
+    }
     if (currentLayer === "overlooked") {
       const maxCount = Math.max(1, ...[...workStressById.values()].map((w) => w.shoulder));
       const vals = [0, Math.max(1, Math.round(maxCount / 3)), Math.max(2, Math.round((2 * maxCount) / 3)), maxCount];
@@ -245,7 +377,47 @@ async function initMap() {
   }
 
   function redraw() {
+    const def = LAYER_DEFS[currentLayer];
+    document.getElementById("layer-caption").textContent = def.caption;
+    const tagEl = document.getElementById("map-panel-tag");
+    if (tagEl) tagEl.textContent = def.tag;
+    document.querySelectorAll("#layer-rail .layer-btn").forEach((btn) => {
+      btn.classList.toggle("on", btn.dataset.layer === currentLayer);
+    });
+
+    if (currentLayer === "districts") {
+      // Choropleth view: city dots come off (polygon + dots is unreadable).
+      for (const { marker } of markers) map.removeLayer(marker);
+      renderLabels(); // clears the city labels (non-overlooked layer)
+      const captionEl = document.getElementById("layer-caption");
+      if (!districtBundle) {
+        captionEl.textContent = "Loading district data (boundaries + Census workforce + today's forecast)…";
+        loadDistrictBundle().then(() => {
+          if (currentLayer !== "districts") return; // user already switched away
+          redraw();
+        }).catch((err) => {
+          console.error(err);
+          captionEl.textContent = "Could not load district data: " + err.message;
+        });
+        renderLegend();
+        return;
+      }
+      renderDistrictLayer();
+      // Vintage + staleness, stated with the layer, not buried: workforce
+      // shares are 2011; the heat summary is dated and refreshed daily.
+      let caveat = ` Workforce: Census 2011 (structure moves slowly, but it is 2011 — post-2011 districts appear within parent boundaries). One forecast point per district, ~25 km grid.`;
+      const todayIst = nowInIst().dateKey;
+      if (districtBundle.daily.ist_date !== todayIst) {
+        caveat = ` ⚠ District heat shown is for ${districtBundle.daily.ist_date} (IST) — today's refresh hasn't landed yet.` + caveat;
+      }
+      captionEl.textContent = def.caption + caveat;
+      renderLegend();
+      return;
+    }
+
+    if (districtLayer) map.removeLayer(districtLayer);
     for (const { record, marker } of markers) {
+      if (!map.hasLayer(marker)) marker.addTo(map);
       const style = styleFor(record);
       marker.setStyle({ radius: style.radius, fillColor: style.color, fillOpacity: style.opacity });
       // Orange glow on dots that carry overlooked hours (SVG filter on the
@@ -254,13 +426,6 @@ async function initMap() {
       if (el) el.style.filter = style.glow ? MAP_THEME.glow : "";
     }
     renderLabels();
-    const def = LAYER_DEFS[currentLayer];
-    document.getElementById("layer-caption").textContent = def.caption;
-    const tagEl = document.getElementById("map-panel-tag");
-    if (tagEl) tagEl.textContent = def.tag;
-    document.querySelectorAll("#layer-rail .layer-btn").forEach((btn) => {
-      btn.classList.toggle("on", btn.dataset.layer === currentLayer);
-    });
     renderLegend();
   }
 
@@ -271,10 +436,10 @@ async function initMap() {
     });
   });
 
-  // Keep the default layer + open popups current when workload changes.
+  // Keep the workload-dependent layers + open popups current on change.
   document.addEventListener("workloadchange", () => {
     recomputeWorkStress();
-    if (currentLayer === "overlooked") redraw();
+    if (currentLayer === "overlooked" || currentLayer === "districts") redraw();
   });
 
   redraw();

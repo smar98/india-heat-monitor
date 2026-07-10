@@ -419,6 +419,62 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
   </section>
 
   <section>
+    <h2>The district layer: workers at risk</h2>
+    <p>
+      The "Workers at risk, by district" map layer answers a different
+      question than the city dots: not just <em>where is it hot</em>, but
+      <em>how many outdoor workers does the advice overlook, and where</em>.
+      Each of the 640 districts (2011 Census frame) is shaded by
+      <strong>worker-hours at risk</strong>: its outdoor workforce
+      multiplied by today's forecast overlooked hours at the selected
+      workload.
+    </p>
+    <p>
+      <strong>Workforce data.</strong> Census of India 2011, table B-04
+      (main workers by industrial category), per district. "Outdoor
+      workers" counts main workers in the predominantly-outdoor categories:
+      NIC&nbsp;A (cultivators, agricultural labourers, and
+      plantation/livestock/forestry/fishing), NIC&nbsp;B (mining), and
+      NIC&nbsp;F (construction) &mdash; about 212 million people nationally.
+      This deliberately <em>under-counts</em> outdoor exposure (street
+      vendors sit in retail, brick-kiln workers partly in manufacturing);
+      erring low is the honest direction. The per-state totals were
+      verified to equal the sum of their districts exactly, and every
+      mapped district joins a workforce record. (State-level registration
+      counts under the BOCW Act, published on
+      <a href="https://www.data.gov.in/resource/state-wise-number-registered-building-and-other-construction-boc-workers-and-cess-under">data.gov.in</a>
+      as of March 2024, offer a more recent &mdash; though
+      registration-based and state-level &mdash; view of the construction
+      workforce.)
+    </p>
+    <p>
+      <strong>Heat data.</strong> One forecast point per district (a
+      representative interior point), refreshed once daily in the early
+      morning IST, scored with the same estimated-WBGT-vs-REL definition as
+      everything else on this page. The layer is labeled with its data date
+      if a refresh is missed.
+    </p>
+    <p>
+      <strong>Boundaries.</strong> 2011 Census district boundaries from the
+      <a href="https://github.com/datameet/maps">DataMeet India community</a>
+      (simplified for the browser; shapes otherwise unmodified &mdash;
+      <a href="data/india_districts_2011.geojson.LICENSE.txt">license/attribution</a>).
+      The 2011 frame is used deliberately so the Census join is exact;
+      districts created after 2011 appear within their parent boundaries.
+    </p>
+    <p class="caveat">
+      Read the shading as <em>scale of exposure</em>, not precision: the
+      workforce shares are from 2011 (India's last completed census &mdash;
+      occupational structure moves slowly, but it is 15 years old); the heat
+      value is one model grid point (~25&nbsp;km) per district, and large
+      districts span more microclimates than one point can carry; and the
+      hours are forecast, not observed. Worker-hours multiply those
+      uncertainties together &mdash; the layer ranks districts against each
+      other; it does not measure any district's true exposure.
+    </p>
+  </section>
+
+  <section>
     <h2>AI-transparency note</h2>
     <p>
       This dashboard's data pipeline, scientific-formula implementations,

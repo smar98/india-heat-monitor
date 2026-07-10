@@ -1,0 +1,20 @@
+heat/data/india_districts_2011.geojson is derived from:
+
+  DataMeet India community, "maps" repository
+  https://github.com/datameet/maps
+  Files: Districts/Census_2011/2011_Dist.{shp,shx,dbf,prj}
+
+License: the repository carries an MIT LICENSE file
+(https://github.com/datameet/maps/blob/master/LICENSE) while its README
+states datasets are shared under CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/) unless stated otherwise.
+This attribution is written to satisfy both: District boundaries (Census
+2011) by the DataMeet India community (http://datameet.org/), used under
+MIT / CC BY 4.0.
+
+Modifications: converted from Shapefile to GeoJSON; simplified with
+mapshaper (-simplify 6% keep-shapes -clean, coordinate precision 0.001,
+~100m) from ~10MB to ~1MB; attribute fields reduced to
+censuscode/DISTRICT/ST_NM. Boundary shapes otherwise unmodified. 641
+districts (2011 Census frame; districts created after 2011 appear within
+their parent boundaries).

@@ -103,7 +103,17 @@ def fetch_block(lat, lon, y0, y1):
     }
     delay = 5.0
     for attempt in range(1, MAX_RETRIES + 1):
-        resp = requests.get(ARCHIVE_URL, params=params, timeout=180)
+        # Transient network failures (DNS blips, dropped connections) get the
+        # same backoff as 429s -- a multi-hour run WILL hit at least one, and
+        # an unhandled one previously killed the run 25 blocks from the end.
+        try:
+            resp = requests.get(ARCHIVE_URL, params=params, timeout=180)
+        except (requests.ConnectionError, requests.Timeout) as e:
+            print(f"(network error, waiting {delay:.0f}s, attempt {attempt}/{MAX_RETRIES}: {e.__class__.__name__}) ",
+                  end="", flush=True)
+            time.sleep(delay)
+            delay *= 2
+            continue
         if resp.status_code == 429:
             wait = max(float(resp.headers.get("Retry-After", delay)), delay)
             print(f"(429, waiting {wait:.0f}s, attempt {attempt}/{MAX_RETRIES}) ", end="", flush=True)
@@ -112,7 +122,7 @@ def fetch_block(lat, lon, y0, y1):
             continue
         resp.raise_for_status()
         return resp.json()
-    raise RuntimeError(f"still rate-limited after {MAX_RETRIES} retries (lat={lat}, lon={lon}, {y0}-{y1})")
+    raise RuntimeError(f"still failing after {MAX_RETRIES} retries (lat={lat}, lon={lon}, {y0}-{y1})")
 
 
 def aggregate_hours(hourly, lat, lon):

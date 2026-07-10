@@ -14,3 +14,6 @@ design/
 
 # one-time trend backfill cache (regenerable; assembled into heat/data/trends.json)
 data/trends_cache/
+
+# Pre-pivot prior-art review — internal working doc, removed from the public repo 2026-07-10
+existing_tools_research.md

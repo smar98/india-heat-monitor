@@ -2,8 +2,6 @@
 
 A running record of how this dashboard was built and why the key decisions
 went the way they did, kept alongside the code so the reasoning isn't lost.
-See `existing_tools_research.md` for the prior-art review that shaped the
-project's scope.
 
 ---
 

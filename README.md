@@ -43,9 +43,8 @@ limit," never "safe hours."
 - 1991–2020 climatological normals (ERA5) are computed once for the map's
   anomaly layer.
 
-See `existing_tools_research.md` for the prior-art review, `heat/methods.html`
-for full methodology, sources, validity ranges, and caveats, and
-`BUILD_LOG.md` for the build history and decisions.
+See `heat/methods.html` for full methodology, sources, validity ranges, and
+caveats, and `BUILD_LOG.md` for the build history and decisions.
 
 > Framing note: this is an exploratory, transparent, live policy dashboard
 > highlighting a plausible blind spot in fixed work-hour guidance — not

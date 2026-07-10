@@ -15,7 +15,7 @@
 
   <header class="masthead">
     <div class="kicker">Methods &amp; sources</div>
-    <h1>How this dashboard is built</h1>
+    <h1>How The Overlooked Hours is built</h1>
     <p class="dek">
       Every formula, threshold, and data source used on this dashboard,
       with validity ranges and honest caveats. If a number on the main
@@ -35,14 +35,13 @@
       (roughly 11am&ndash;5pm across states) and shift work to the morning
       and evening. This dashboard asks: how often do those shifted-to
       shoulder hours themselves cross the occupational heat-stress limit, once
-      humidity, sun, and wind are counted? A prior-art review (see the
-      repository's <code>existing_tools_research.md</code>) found serious
-      tools for occupational heat stress, thermal-comfort datasets, and
-      live weather maps, but no public, India-specific, hourly view of
-      outdoor-work heat stress set against the fixed work-hour guidance.
-      This dashboard exists to fill that specific gap &mdash; not to claim
-      no one tracks heat risk in India, which official IMD/NDMA heat-wave
-      communication clearly does.
+      humidity, sun, and wind are counted? Serious tools exist for
+      occupational heat stress, thermal comfort, and live weather &mdash;
+      but there is no public, India-specific, hourly view of outdoor-work
+      heat stress set against the fixed work-hour guidance. This dashboard
+      exists to fill that specific gap &mdash; not to claim no one tracks
+      heat risk in India, which official IMD/NDMA heat-wave communication
+      clearly does.
     </p>
   </section>
 
@@ -143,10 +142,9 @@
       hot/humid daytime scenario and a nighttime scenario). The Python
       port's output matched the compiled C binary's actual output to
       within about 0.02&ndash;0.1&deg;C &mdash; consistent with ordinary
-      floating-point precision differences between C's <code>float</code>
-      and Python's <code>double</code>, not a translation error. Both test
-      cases are kept as permanent automated regression tests in the
-      repository (<code>tests/test_liljegren_wbgt.py</code>).
+      floating-point precision differences, not a translation error. Both
+      test cases are kept as permanent automated regression tests in the
+      public repository.
     </p>
     <p>
       <strong>Caveat:</strong> this is an estimate from meteorological
@@ -160,16 +158,11 @@
     <h2>Outdoor-work risk reference — NIOSH RAL/REL</h2>
     <p class="section-note">
       This dashboard does <strong>not</strong> use a flat "safe/moderate/
-      danger" WBGT scale. An earlier draft did, using invented thresholds
-      loosely modeled on ISO 7243 (&lt;28&deg;C / 28&ndash;30&deg;C /
-      30&ndash;32&deg;C / &gt;32&deg;C) &mdash; but checking those against
-      the real standard found that ACGIH's and ISO 7243's actual tables
-      vary continuously by workload and work/rest duty cycle, and are
-      themselves paywalled (confirmed directly via OSHA's own Technical
-      Manual, which states the ACGIH heat-stress tables "are copyrighted
-      by ACGIH and is not publicly available"). Publishing invented
-      numbers under a borrowed standard's name would have been dishonest,
-      so instead this dashboard uses NIOSH's own public formula, from:
+      danger" WBGT scale. The commonly cited ACGIH and ISO 7243 threshold
+      tables vary continuously by workload and work/rest duty cycle, and
+      their exact values are not freely published (OSHA's Technical Manual
+      notes the ACGIH heat-stress tables are copyrighted and not publicly
+      available). So the limits here come from NIOSH's own public formula:
     </p>
     <p>
       NIOSH, 2016: "Criteria for a Recommended Standard: Occupational
@@ -186,8 +179,7 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
       (60 min/h) work. The dashboard's workload selector uses four levels
       on NIOSH's own kcal/h basis (converted at 1 kcal/h = 1.163 W), and
       reports the <strong>REL</strong> (acclimatized) line by default. The
-      same four values are used in the frontend, on this page, and in
-      <code>scripts/wbgt.py</code>:
+      same four values are used everywhere on the site:
     </p>
     <table class="method-table">
       <thead><tr><th>Workload</th><th>Metabolic rate</th><th>REL (&deg;C WBGT)</th><th>Illustrative task</th></tr></thead>
@@ -231,12 +223,10 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
     <h2>Data sources</h2>
     <h3>Live forecast</h3>
     <p>
-      <a href="https://open-meteo.com/">Open-Meteo</a> Forecast API,
+      <a href="https://open-meteo.com/">Open-Meteo</a> Forecast API:
       hourly temperature, relative humidity, shortwave solar radiation,
-      wind speed, and surface pressure, for all ~50 cities in a single
-      batched request every 6 hours via GitHub Actions. No API key
-      required; free tier is 10,000 calls/day, and this pipeline uses
-      exactly one call per run.
+      wind speed, and surface pressure for all ~50 cities, refreshed
+      automatically every 3 hours.
     </p>
     <h3>1991&ndash;2020 historical normal</h3>
     <p>
@@ -253,40 +243,35 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
     </p>
     <h3>City list</h3>
     <p>
-      50 Indian cities selected from
+      50 large Indian cities: the biggest by population, with deliberate
+      substitutions so humid coastal and eastern India are well represented
+      rather than the sample being dominated by drier, better-known
+      northern cities &mdash; which matters for reading the headline count.
+      Coordinates from
       <a href="https://github.com/Vynex/indian-cities-geodata">Vynex/indian-cities-geodata</a>
-      (Apache 2.0 licensed; coordinates sourced from Census 2011 population
-      figures and Google Maps), taking the largest cities by population
-      with deliberate substitutions to ensure humid coastal and eastern
-      cities are well represented rather than dominated by drier, better-
-      known cities.
+      (Apache 2.0; based on Census 2011 and Google Maps).
     </p>
     <h3>Map boundaries</h3>
     <p>
-      India state/UT boundaries from
+      India state/UT boundaries from the
       <a href="https://github.com/datameet/maps">DataMeet India community's "maps" repository</a>
-      (MIT licensed), simplified from 15.7MB to about 140KB using
-      <code>mapshaper</code> for faster loading, with all boundary shapes
-      otherwise unmodified. See
-      <a href="data/india_states.geojson.LICENSE.txt">the license/attribution file</a>
-      in the repository for full details.
+      (MIT licensed), simplified for faster loading with all boundary
+      shapes otherwise unmodified
+      (<a href="data/india_states.geojson.LICENSE.txt">license/attribution</a>).
     </p>
     <h3>Official heat alerts (logged, not yet published)</h3>
     <p>
-      Since July 2026, each pipeline run also records which official heat
+      Since July 2026, each data refresh also records which official heat
       alerts are active for each monitored city, from two public sources:
       the India Meteorological Department's
       <a href="https://cap-sources.s3.amazonaws.com/in-imd-en/rss.xml">Common
       Alerting Protocol (CAP) feed</a> (IMD-signed alerts carrying the actual
-      warning polygons) and NDMA's
+      warning areas) and NDMA's
       <a href="https://sachet.ndma.gov.in/">SACHET national alert portal</a>
-      (which also carries state-SDMA alerts). These are stored alongside the
-      same run's estimated-WBGT-vs-REL record (<code>data/alerts/</code> in
-      the repository) so that a future update can compare the two using
-      <em>real</em> official warnings rather than a reconstruction of
-      declaration criteria. <strong>No such comparison is published yet</strong>,
-      and nothing on this page reads that log; it is disclosed here because
-      the repository is public.
+      (which also carries state-SDMA alerts). The record is kept so a future
+      update can compare official warnings against these estimates using
+      <em>real</em> alerts rather than a reconstruction of declaration
+      criteria. <strong>No such comparison is published yet.</strong>
     </p>
   </section>
 
@@ -379,6 +364,61 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
   </section>
 
   <section>
+    <h2>The long view: overlooked hours per year, 1980&ndash;2024</h2>
+    <p>
+      The trend panel applies <em>exactly the same definition and code
+      path</em> as today's count &mdash; Stull wet-bulb, the Liljegren WBGT
+      model, the NIOSH REL for the selected workload, the 11am&ndash;5pm
+      window, the sun-up rule &mdash; to 45 years of hourly history, and
+      counts the overlooked hours in each calendar year (IST).
+    </p>
+    <p>
+      <strong>Data.</strong> Hourly ERA5 reanalysis (temperature, relative
+      humidity, shortwave radiation, wind, surface pressure) from the
+      <a href="https://open-meteo.com/en/docs/historical-weather-api">Open-Meteo
+      Historical Weather API</a> &mdash; the same source family as the
+      1991&ndash;2020 normals. Computed once and published as a static
+      dataset; the script that builds it is in the public repository.
+    </p>
+    <p>
+      <strong>Why 1980, not 1940.</strong> ERA5 extends back to 1940, but
+      its pre-satellite-era quality is weakest in exactly the variables
+      WBGT leans on most &mdash; solar radiation and wind. Starting at 1980
+      keeps the whole series inside the satellite era; 45 years is ample
+      for the trend question.
+    </p>
+    <p>
+      <strong>Why 2025 is excluded.</strong> It is incomplete: a half year
+      would render as a collapse in an annual-count chart. The series ends
+      with the last complete year, 2024.
+    </p>
+    <p>
+      <strong>The window anachronism, stated plainly.</strong> The
+      11am&ndash;5pm avoidance window is <em>today's</em> audited HAP union
+      applied to every year since 1980 &mdash; the chart answers &ldquo;how
+      many hours would today's guidance overlook,&rdquo; not &ldquo;what did
+      guidance overlook at the time&rdquo; (most of the period predates any
+      HAP; the first Indian HAP is Ahmedabad's, 2013).
+    </p>
+    <p>
+      <strong>Two data products, never mixed.</strong> The live dashboard
+      runs on forecast data; the trend runs on reanalysis. They differ in
+      kind (a reanalysis assimilates observations after the fact) and the
+      page never reads one against the other &mdash; the trend panel carries
+      its own caveat saying so.
+    </p>
+    <p class="caveat">
+      Computation notes: the sensitivity band shown is the same
+      &plusmn;1&deg;C WBGT-error convention as the headline. Hours with
+      missing variables are dropped, not filled; hours provably too cool to
+      approach any limit are counted as below it (the derivation of that
+      bound is documented in the build script); solver non-convergence
+      yields no estimate, not a zero. All counts are model estimates on a
+      ~25&thinsp;km grid, not observations.
+    </p>
+  </section>
+
+  <section>
     <h2>AI-transparency note</h2>
     <p>
       This dashboard's data pipeline, scientific-formula implementations,
@@ -404,11 +444,9 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
       </li>
       <li>
         All reproducible pipeline scripts (data fetching, the wet-bulb
-        and WBGT calculations, the historical-normals builder) are in the
+        and WBGT calculations, the historical builders) are in the
         <a href="https://github.com/smar98/india-heat-monitor">public repository</a>,
-        along with an automated test suite and a running build log
-        (<code>BUILD_LOG.md</code>) documenting what was built, what broke,
-        and how each issue was found and fixed.
+        along with an automated test suite.
       </li>
     </ul>
   </section>

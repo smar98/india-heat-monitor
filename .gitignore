@@ -11,3 +11,6 @@ HANDOFF.md
 
 # Local-only design references (Claude design handoff bundle) — keep off the public repo
 design/
+
+# one-time trend backfill cache (regenerable; assembled into heat/data/trends.json)
+data/trends_cache/

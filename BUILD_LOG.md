@@ -474,3 +474,83 @@ the reasons function reads exactly that off the stored components).
 - General polish: no live testing yet of edge cases (a city with a WBGT
   solver non-convergence, mobile layout at very small widths beyond what
   the user already checked, dark mode, print/share behavior).
+
+
+## Step 8 — The pivot: from "misranking" to "The Overlooked Hours" (2026-07-05 → 07-08, logged retrospectively)
+
+This entry back-fills a week the log missed. The project's thesis changed
+entirely in this window; the commits tell the story:
+
+**Why the original thesis died.** The launch framing — rank cities by air
+temperature vs by estimated WBGT and headline the "misranking delta" — failed
+three tests at once: (1) the live data refuted its story (which cities "climb"
+flips day to day with the weather; there is no stable "humid coastal cities
+are underrated" pattern); (2) India's warning system is not humidity-blind
+(IMD defines "warm night" and "hot and humid" categories), so the implied
+critique would not survive scrutiny; (3) two independent reviews (a 5-advisor
+LLM council and external Codex reviews) both named the misranking frame the
+weakest, most attackable part.
+
+**The reframe** (`7685911`, `ee22b4e`, `4c148c3`): India's Heat Action Plans
+give outdoor workers fixed afternoon-avoidance windows and advise shifting
+work to the morning/evening. The defensible, hourly finding: on hot days
+those shoulder hours themselves cross the NIOSH REL work-stress limit. The
+new headline counts those "overlooked hours" per city, for a selectable
+workload (Light/Moderate/Heavy/Very heavy), wired to the map and clock. All
+"dry-bulb vs WBGT" and ranking language was purged from user-facing copy;
+the page now speaks in the government's own vocabulary ("maximum
+temperature" declarations, "afternoon-avoidance windows"). The misranking
+views (slope chart, insights) were deleted outright.
+
+**Review-response hardening** (`774941b`, `fef0126`): harmonized the
+workload metabolic rates to NIOSH's kcal/h basis after a review caught the
+frontend using ISO-8996 watts (moderate REL now 27.46 °C everywhere);
+purged self-contradictory "safe hours" language ("exceeds the NIOSH
+heat-stress reference limit" instead); added a stale-data banner (>9 h) and
+bumped the cron to every 3 h after verifying GitHub's scheduled runs drift;
+added a primary-sourced table of the audited HAP windows (Odisha 2018, AP
+2020, Ahmedabad 2019, Delhi 2024-25, NDMA national — verbatim quotes with
+page numbers, from the actual government PDFs) establishing 11am–5pm as the
+union window and the count as a conservative lower bound; added the ±1 °C
+sensitivity band to the headline and a quantitative per-layer map legend.
+
+**Renamed** (`fa073bc`) from "India Humid Heat Monitor" to **"The Overlooked
+Hours"** — "Monitor" over-promised an operational tool. The repo slug stays
+`india-heat-monitor` (renaming would break the Pages URL).
+
+## Step 9 — Official heat-alert logger: SACHET + IMD CAP (2026-07-10)
+
+**What was built.** `scripts/fetch_alerts.py`, run by the existing 3-hourly
+workflow after the forecast fetch. Each run it (a) pulls active alerts from
+two public official sources — NDMA's SACHET portal (JSON; includes
+state-SDMA alerts) and IMD's signed CAP 1.2 feed (per-alert XML carrying the
+actual warning polygons) — keeps the heat-related ones ("heat", "hot day",
+"hot and humid", "warm night"); (b) recomputes, in Python, the exact same
+per-city REL-exceedance record the frontend shows (heavy workload, WBGT ≥
+REL, 11–5 window, sun-up > 50 W/m², mirrored from `heat/js/data.js` and
+cross-checked to match); and (c) appends both to monthly JSONL logs under
+`data/alerts/` — `raw/` (one line per newly seen alert, deduped) and
+`citylog/` (one line per run, all 50 cities, with the ids of any active
+alerts covering each city; polygon matching is point-in-polygon, SACHET
+centroids are matched as equal-area circles and never guessed when the
+coordinate order is ambiguous).
+
+**Why.** A future "official warnings vs estimated work-stress" comparison is
+only honest if it uses *real* warnings, and that dataset only exists from
+the day logging starts. Nothing on the site reads it yet — no comparison is
+published or implied; the methods page discloses the logging. A "zero
+alerts" line during monsoon is expected and is itself the record.
+
+**Failure policy.** The logger can never block the heat-data pipeline: every
+fetch is isolated, total failure still exits 0, and source failures are
+flagged in the log line (`alert_sources_ok`) so gaps are distinguishable
+from genuinely quiet days. Verified by simulating total network failure.
+
+**Verification:** 17 new tests (37 total passing) covering the CAP/SACHET
+parsers (real-format fixtures, including the actual Uttarakhand alert
+polygon), point-in-polygon against real geometry, IST→UTC conversion,
+boundary-hour window semantics (11:00 inside, 17:00 outside), the
+at-the-limit case (WBGT = REL counts as stress, matching the frontend), and
+dedupe. Live run: both sources 200 OK, 0 heat alerts (July — monsoon), 50
+city signals; Delhi's line independently recomputed from `latest.json` and
+matched exactly.

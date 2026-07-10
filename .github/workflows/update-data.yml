@@ -38,11 +38,18 @@ jobs:
       - name: Validate fetched data before committing
         run: python3 scripts/validate_latest.py
 
+      - name: Log active official heat alerts (SACHET + IMD CAP)
+        # Data collection only -- nothing on the site reads this yet. The
+        # script always exits 0 (its own failure policy); continue-on-error
+        # is a second belt so alert logging can never block the heat data.
+        continue-on-error: true
+        run: python3 scripts/fetch_alerts.py
+
       - name: Commit updated data if it changed
         run: |
           git config user.name "heat-monitor-bot"
           git config user.email "actions@github.com"
-          git add heat/data/latest.json
+          git add heat/data/latest.json data/alerts
           if git diff --cached --quiet; then
             echo "No data changes, nothing to commit."
           else

@@ -8,3 +8,6 @@ venv/
 
 # Local-only context/handoff doc — must NOT be published to the public repo
 HANDOFF.md
+
+# Local-only design references (Claude design handoff bundle) — keep off the public repo
+design/

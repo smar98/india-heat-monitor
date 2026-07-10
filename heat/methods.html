@@ -267,6 +267,23 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
       <a href="data/india_states.geojson.LICENSE.txt">the license/attribution file</a>
       in the repository for full details.
     </p>
+    <h3>Official heat alerts (logged, not yet published)</h3>
+    <p>
+      Since July 2026, each pipeline run also records which official heat
+      alerts are active for each monitored city, from two public sources:
+      the India Meteorological Department's
+      <a href="https://cap-sources.s3.amazonaws.com/in-imd-en/rss.xml">Common
+      Alerting Protocol (CAP) feed</a> (IMD-signed alerts carrying the actual
+      warning polygons) and NDMA's
+      <a href="https://sachet.ndma.gov.in/">SACHET national alert portal</a>
+      (which also carries state-SDMA alerts). These are stored alongside the
+      same run's estimated-WBGT-vs-REL record (<code>data/alerts/</code> in
+      the repository) so that a future update can compare the two using
+      <em>real</em> official warnings rather than a reconstruction of
+      declaration criteria. <strong>No such comparison is published yet</strong>,
+      and nothing on this page reads that log; it is disclosed here because
+      the repository is public.
+    </p>
   </section>
 
   <section>

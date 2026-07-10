@@ -554,3 +554,49 @@ at-the-limit case (WBGT = REL counts as stress, matching the frontend), and
 dedupe. Live run: both sources 200 OK, 0 heat alerts (July — monsoon), 50
 city signals; Delhi's line independently recomputed from `latest.json` and
 matched exactly.
+
+## Step 10 — Frontend redesign: "The Console" (2026-07-10)
+
+**What changed.** The whole dashboard was re-skinned to a dark
+operations-console design (a Claude-generated design mockup, adopted after
+review; the visual spec lives in a local design-handoff bundle): topbar with
+live status and IST timestamp; a dynamic headline ("...cross the heat-stress
+limit in N of 50 cities today"); four KPI cards (cities affected /
+city-hours / worst city / ±1 °C band); a three-column console (workload +
+map-layer rail · Leaflet map · "most overlooked today" leaderboard); and a
+lower row (workday clock with a shaded "AVOID 11–5" band · a by-workload
+panel showing cities affected at all four RELs). Typography: Bricolage
+Grotesque / Hanken Grotesk / Spline Sans Mono (Google Fonts). Added a
+favicon (inline SVG sun).
+
+**What deliberately did NOT change.** All computation: `data.js` is
+untouched, and the port was verified as a pure re-skin — the redesigned
+page's headline count, top city, sensitivity band, and by-workload counts
+were checked against a Node re-run of the same functions on the same
+`latest.json` (48/50 cities, 236 shoulder-hours, band 43–50, Varanasi top,
+by-workload 22/42/48/50) and matched exactly. The mockup's own synthetic
+data layer and artifact runtime were discarded; only markup, CSS, and the
+clock/band rendering pattern were ported.
+
+**Map: restyled, not replaced.** The mockup used a static D3 SVG map; the
+dashboard keeps Leaflet (pan/zoom/popups are the centerpiece, and the
+planned district layer needs it) restyled dark: raster tiles dropped in
+favor of the vendored DataMeet state boundaries as a dark landmass (which
+also removes tile-label language issues and the Esri dependency), a warm
+color ramp, an orange glow on cities with overlooked hours, and mono
+labels for the top-5 cities.
+
+**Carried over intact** (the honesty scaffolding the mockup omitted):
+explainer + glossary, stale-data banner (message updated to the 3-hour
+cadence), forecast/not-observed and 50-city-sample labels, the 11–5
+lower-bound fine print, "never safe hours" footer, methods links, and the
+AI-transparency note. The old light frontend is preserved on the
+`classic-frontend` branch for one-command revert.
+
+**Verification:** pytest 37/37; node --check on all JS; banned-language
+audit (no "safe hours"/"dry-bulb"/ranking framing in user-facing copy);
+and — new this step — full in-browser verification via a sandbox-visible
+mirror: page rendered at desktop and 375px mobile widths, workload
+switching exercised end-to-end (headline, KPIs, leaderboard, map, clock,
+by-workload panel all recompute; Light = 22 cities matching the Node
+check), zero console errors, methods page confirmed dark-themed.

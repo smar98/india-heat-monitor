@@ -1,112 +1,136 @@
 /*
- * Headline section: "The overlooked hours."
+ * Console header: the headline count, KPI cards, workload rail, the
+ * "most overlooked today" leaderboard, and the by-workload panel.
  *
  * India's Heat Action Plans tell outdoor workers to avoid the afternoon and
- * shift work to the morning and evening. This section shows, live, how often
+ * shift work to the morning and evening. These views show, live, how often
  * those shoulder hours THEMSELVES cross the acclimatized heat-stress limit
- * (REL) for the selected workload -- i.e. the guidance sends workers into
- * hours that exceed the heat-stress reference limit. That is the dashboard's central,
- * empirically-verified claim.
+ * (REL) for the selected workload. All numbers come from
+ * computeOverlookedSummary in data.js -- the same functions the map and
+ * clock use, so the views can never disagree.
  *
- * It owns the workload selector (via setWorkload in data.js), which the
- * workday clock also listens to, so the whole page recomputes together.
+ * Owns the workload selector (via setWorkload in data.js); the map and the
+ * workday clock listen for the resulting "workloadchange" event.
  */
-
-function renderWorkloadControls() {
-  const host = document.getElementById("workload-controls");
-  host.innerHTML = "";
-  const current = getWorkload();
-
-  const label = document.createElement("span");
-  label.className = "workload-label";
-  label.textContent = "Workload:";
-  host.appendChild(label);
-
-  for (const w of WORKLOAD_LEVELS) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.dataset.workload = w.key;
-    btn.className = "workload-btn" + (w.key === current.key ? " active" : "");
-    btn.textContent = w.label;
-    btn.title = `${w.label} work (~${w.watts} W): ${w.examples}`;
-    btn.addEventListener("click", () => setWorkload(w.key));
-    host.appendChild(btn);
-  }
-
-  const rel = getRelThreshold();
-  const note = document.createElement("span");
-  note.className = "workload-note";
-  note.innerHTML =
-    `${current.label} work (~${current.watts} W) &rarr; ` +
-    `heat-stress limit <strong>${rel.toFixed(1)}&deg;C WBGT</strong>. ` +
-    `<span class="workload-eg">e.g. ${current.examples}</span>`;
-  host.appendChild(note);
-}
 
 let _headlineCities = null;
 let _headlineLatest = null;
 
+function renderWorkloadRail() {
+  const host = document.getElementById("workload-rail");
+  host.innerHTML = "";
+  const current = getWorkload();
+  for (const w of WORKLOAD_LEVELS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.workload = w.key;
+    btn.className = "wbtn" + (w.key === current.key ? " on" : "");
+    btn.title = `${w.label} work (~${w.watts} W): ${w.examples}`;
+    btn.innerHTML = `${w.label}<span class="rel">${nioshRelC(w.watts).toFixed(1)}&deg;</span>`;
+    btn.addEventListener("click", () => setWorkload(w.key));
+    host.appendChild(btn);
+  }
+  // Rail buttons render stacked with a small gap, like the rail chips.
+  host.style.display = "flex";
+  host.style.flexDirection = "column";
+  host.style.gap = "8px";
+}
+
 function renderHeadline() {
   const rel = getRelThreshold();
+  const workload = getWorkload();
   const summary = computeOverlookedSummary(_headlineCities, _headlineLatest, rel);
 
-  const statHost = document.getElementById("overlooked-stat");
+  const countEl = document.getElementById("hl-count");
   if (summary.citiesTotal === 0) {
-    statHost.innerHTML = '<p style="color:#b3401f;">No current data available.</p>';
+    countEl.textContent = "…";
+    document.getElementById("overlooked-list").innerHTML =
+      '<p class="empty">No current data available.</p>';
     return;
   }
-
-  const workload = getWorkload();
 
   // Sensitivity to the ~1C estimation error in WBGT: recompute the headline
   // at the limit +/- 1C. Lower limit (rel-1) => more hours qualify => higher
   // count, so the band runs [count(rel+1) .. count(rel-1)]. This shows the
   // finding survives the estimate's uncertainty rather than hiding it.
-  const loose = computeOverlookedSummary(_headlineCities, _headlineLatest, rel - 1); // more sensitive
-  const tight = computeOverlookedSummary(_headlineCities, _headlineLatest, rel + 1); // less sensitive
+  const loose = computeOverlookedSummary(_headlineCities, _headlineLatest, rel - 1);
+  const tight = computeOverlookedSummary(_headlineCities, _headlineLatest, rel + 1);
   const cityLo = Math.min(tight.citiesWithShoulder, summary.citiesWithShoulder, loose.citiesWithShoulder);
   const cityHi = Math.max(tight.citiesWithShoulder, summary.citiesWithShoulder, loose.citiesWithShoulder);
-  const hrLo = Math.min(tight.totalShoulderHours, loose.totalShoulderHours);
-  const hrHi = Math.max(tight.totalShoulderHours, loose.totalShoulderHours);
 
-  statHost.innerHTML = `
-    <div class="stat-big"><span class="stat-num">${summary.citiesWithShoulder}</span> of ${summary.citiesTotal} monitored cities</div>
-    <div class="stat-say">are <em>forecast</em> today to have outdoor work-stress
-      hours in the morning or evening &mdash; <em>outside</em> the afternoon
-      window (11am&ndash;5pm) that guidance says to avoid &mdash; for
-      <strong>${workload.label.toLowerCase()}</strong> work.</div>
-    <div class="stat-sub">${summary.totalShoulderHours} such city-hours forecast in all, with the sun up.
-      ${summary.totalDarkHumid > 0 ? `(${summary.totalDarkHumid} more after dark, driven by humidity &mdash; reported separately below.)` : ""}
-      Among this 50-city sample; not a national estimate.</div>
-    <div class="stat-band">Estimated WBGT carries roughly &plusmn;1&deg;C of error. Allowing for
-      that, the figure spans <strong>${cityLo}&ndash;${cityHi} cities</strong> and
-      ${hrLo}&ndash;${hrHi} city-hours &mdash; the finding holds across the band.</div>
-  `;
+  countEl.textContent = `${summary.citiesWithShoulder} of ${summary.citiesTotal}`;
+  document.getElementById("headline-dek").innerHTML =
+    `"Avoid the afternoon, work the morning and evening" &mdash; but for ` +
+    `<strong>${workload.label.toLowerCase()}</strong> work ` +
+    `(limit ${rel.toFixed(1)}&deg;C estimated WBGT) those shoulder hours are ` +
+    `<em>forecast</em> to exceed the NIOSH heat-stress reference limit anyway. ` +
+    `Counted live, per city, per workload &mdash; among this 50-city sample, ` +
+    `not a national estimate.`;
 
-  // Top cities by overlooked shoulder-hours.
+  // KPI cards.
+  document.getElementById("kpi-cities").innerHTML =
+    `${summary.citiesWithShoulder} <small>/ ${summary.citiesTotal}</small>`;
+  document.getElementById("kpi-hours").textContent = summary.totalShoulderHours;
+  document.getElementById("kpi-hours-k").innerHTML =
+    `City-hours outside the window, over the limit, sun up &mdash; forecast, not observed` +
+    (summary.totalDarkHumid > 0
+      ? `. (+${summary.totalDarkHumid} after dark, humidity-driven, reported separately)`
+      : ``);
+  const top0 = summary.perCity.find((c) => c.shoulder > 0);
+  const kpiTop = document.getElementById("kpi-top");
+  const kpiTopK = document.getElementById("kpi-top-k");
+  if (top0) {
+    kpiTop.textContent = top0.name;
+    const hoursLabel = top0.shoulderHours.map((h) => h.istLabel).join(", ");
+    kpiTopK.innerHTML = `Most overlooked today &mdash; ${top0.shoulder} hr at ${hoursLabel} IST`;
+  } else {
+    kpiTop.textContent = "—";
+    kpiTopK.textContent = `No city crosses the ${workload.label.toLowerCase()}-work limit outside the window today`;
+  }
+  document.getElementById("kpi-band").textContent = `${cityLo}–${cityHi}`;
+
+  // Leaderboard: top cities by overlooked shoulder-hours.
   const listHost = document.getElementById("overlooked-list");
-  const top = summary.perCity.filter((c) => c.shoulder > 0).slice(0, 8);
+  const top = summary.perCity.filter((c) => c.shoulder > 0).slice(0, 6);
   if (top.length === 0) {
     listHost.innerHTML =
-      `<p class="insights-sub">No city crosses the ${workload.label.toLowerCase()}-work limit ` +
+      `<p class="empty">No city crosses the ${workload.label.toLowerCase()}-work limit ` +
       `outside the afternoon window today. Try a heavier workload, or check back as conditions change.</p>`;
-    return;
-  }
-  listHost.innerHTML =
-    `<h3>Most overlooked hours today</h3>` +
-    top.map((c) => {
-      const label = c.shoulderHours
-        .map((h) => h.istLabel).join(", ");
+  } else {
+    listHost.innerHTML = top.map((c) => {
+      const label = c.shoulderHours.map((h) => h.istLabel).join(", ");
       return `
-        <div class="overlooked-row">
-          <div class="overlooked-head">
-            <span class="overlooked-name">${c.name}</span>
-            <span class="overlooked-count">${c.shoulder} hr outside window</span>
+        <div class="crow">
+          <div>
+            <div class="nm">${c.name}</div>
+            <div class="st">${c.state}</div>
+            <div class="rs">${label} IST &middot; +${c.insideWindow} inside window</div>
           </div>
-          <div class="overlooked-detail">${c.state} &middot; work-stress at ${label} IST
-            &middot; ${c.insideWindow} more inside the 11&ndash;5 window</div>
+          <div class="dl">${c.shoulder}<small>HR OUT</small></div>
         </div>`;
     }).join("");
+  }
+
+  renderSensPanel();
+}
+
+/* "By workload": cities affected at each workload's REL -- the same forecast
+ * read against all four thresholds, with the selected one highlighted. */
+function renderSensPanel() {
+  const host = document.getElementById("sens-panel");
+  if (!host) return;
+  const current = getWorkload();
+  const counts = WORKLOAD_LEVELS.map((w) => {
+    const rel = nioshRelC(w.watts);
+    const s = computeOverlookedSummary(_headlineCities, _headlineLatest, rel);
+    return { w, rel, count: s.citiesWithShoulder };
+  });
+  const maxCount = Math.max(1, ...counts.map((c) => c.count));
+  host.innerHTML = counts.map(({ w, rel, count }) => `
+    <div class="srow${w.key === current.key ? " on" : ""}">
+      <div class="sh"><span>${w.label} <span class="rel">${rel.toFixed(1)}&deg;C</span></span><span class="cnt">${count}</span></div>
+      <div class="track"><div class="fill" style="width:${Math.round((count / maxCount) * 100)}%"></div></div>
+    </div>`).join("");
 }
 
 async function initHeadline() {
@@ -114,19 +138,17 @@ async function initHeadline() {
   _headlineCities = cities;
   _headlineLatest = latest;
 
-  renderWorkloadControls();
+  renderWorkloadRail();
   renderHeadline();
 
-  // Recompute whenever the workload changes (buttons live here, but the
-  // workday clock can't change workload, so this only fires from our buttons).
   document.addEventListener("workloadchange", () => {
-    renderWorkloadControls();
+    renderWorkloadRail();
     renderHeadline();
   });
 }
 
 initHeadline().catch((err) => {
   console.error(err);
-  const el = document.getElementById("overlooked-stat");
-  if (el) el.innerHTML = '<p style="color:#b3401f;">Could not load: ' + err.message + "</p>";
+  const el = document.getElementById("overlooked-list");
+  if (el) el.innerHTML = '<p class="empty">Could not load: ' + err.message + "</p>";
 });

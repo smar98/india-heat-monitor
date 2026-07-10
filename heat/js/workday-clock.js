@@ -14,12 +14,14 @@
  * recomputes together.
  */
 
+// Tier colors are the design handoff's (design/README.md) and match the
+// legend swatches in index.html 1:1.
 const CLOCK_TIER_COLOR = {
-  "below-rel": "#d7dde0",
-  "stress-window": "#e6b8a2",
-  "stress-shoulder": "#b3401f",
-  "stress-dark": "#8a7f9c",
-  "unknown": "#e8e4d8",
+  "below-rel": "#2f3a44",
+  "stress-window": "#7a5238",
+  "stress-shoulder": "#ef6a3a",
+  "stress-dark": "#6f6486",
+  "unknown": "#3a3f46",
 };
 
 const CLOCK_TIER_LABEL = {
@@ -42,7 +44,7 @@ function renderWorkdayClock(cityId) {
   container.innerHTML = "";
 
   if (hourly.length === 0) {
-    container.innerHTML = '<p style="color:#b3401f;">No hourly data for this city.</p>';
+    container.innerHTML = '<p style="color:#ef8a4a;">No hourly data for this city.</p>';
     return;
   }
 
@@ -58,6 +60,8 @@ function renderWorkdayClock(cityId) {
     return long;
   });
 
+  const scroll = document.createElement("div");
+  scroll.className = "clock-scroll";
   const table = document.createElement("div");
   table.className = "clock-grid";
 
@@ -73,9 +77,32 @@ function renderWorkdayClock(cityId) {
 
     const cellsEl = document.createElement("div");
     cellsEl.className = "clock-cells";
+
+    // Shaded 11am-5pm avoidance band overlaid across the row (design
+    // handoff). Positioned by the row's actual hour span, since a partial
+    // day (data starting mid-day) would make fixed 11/24 fractions wrong.
+    const firstHour = row[0].istHour;
+    const lastHour = row[row.length - 1].istHour;
+    const span = lastHour - firstHour + 1;
+    const bandStart = Math.max(HAP_WINDOW_START, firstHour);
+    const bandEnd = Math.min(HAP_WINDOW_END, lastHour + 1);
+    if (bandEnd > bandStart) {
+      const band = document.createElement("div");
+      band.className = "clock-band";
+      band.style.left = `${((bandStart - firstHour) / span) * 100}%`;
+      band.style.width = `${((bandEnd - bandStart) / span) * 100}%`;
+      if (rowIdx === 0) {
+        const bl = document.createElement("div");
+        bl.className = "clock-band-label";
+        bl.textContent = "AVOID 11–5";
+        band.appendChild(bl);
+      }
+      cellsEl.appendChild(band);
+    }
+
     for (const h of row) {
       const cell = document.createElement("div");
-      cell.className = "clock-cell" + (h.insideWindow ? " clock-cell-window" : "");
+      cell.className = "clock-cell";
       cell.style.background = CLOCK_TIER_COLOR[h.clockTier];
       const wbgtText = h.wbgt_status === 0 && h.wbgt_c != null ? `${h.wbgt_c.toFixed(1)}°C WBGT` : "no estimate";
       cell.title = `${h.istLabel} IST — ${wbgtText}: ${CLOCK_TIER_LABEL[h.clockTier]}`;
@@ -91,7 +118,8 @@ function renderWorkdayClock(cityId) {
     table.appendChild(rowEl);
   });
 
-  container.appendChild(table);
+  scroll.appendChild(table);
+  container.appendChild(scroll);
 
   // Per-city one-line takeaway tied to the selected workload.
   const ws = computeCityWorkStress(cityId, clockLatest, rel, todayIst);
@@ -135,5 +163,5 @@ async function initWorkdayClock() {
 initWorkdayClock().catch((err) => {
   console.error(err);
   document.getElementById("workday-clock").innerHTML =
-    '<p style="color:#b3401f;">Could not load workday clock: ' + err.message + "</p>";
+    '<p style="color:#ef8a4a;">Could not load workday clock: ' + err.message + "</p>";
 });

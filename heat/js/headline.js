@@ -67,18 +67,16 @@ function renderHeadline() {
   const cityHi = Math.max(tight.citiesWithShoulder, summary.citiesWithShoulder, loose.citiesWithShoulder);
 
   countEl.textContent = `${summary.citiesWithShoulder} of ${summary.citiesTotal}`;
-  // The dek carries the so-what: crossing the limit means the body gains
-  // heat faster than it can shed it at that work intensity -- the advice
-  // relocates the risk into the recommended hours rather than removing it.
+  // Plain-language so-what, kept dynamic per workload: the guidance doesn't
+  // remove the risk, it moves it into the hours it recommends instead.
   document.getElementById("headline-dek").innerHTML =
-    `"Avoid the afternoon, work the morning and evening" &mdash; but for ` +
-    `<strong>${workload.label.toLowerCase()}</strong> work, those morning and ` +
-    `evening hours are <em>forecast</em> to cross ${rel.toFixed(1)}&deg;C ` +
-    `estimated WBGT &mdash; the point above which, per NIOSH, sustained ` +
-    `${workload.label.toLowerCase()} work risks heating the body faster ` +
-    `than it can cool itself, even for workers used to the heat. The risk ` +
-    `isn't removed &mdash; it's relocated to the very hours the advice ` +
-    `recommends. Among this 50-city sample; not a national estimate.`;
+    `India's heat guidance tells outdoor workers to shift into the morning ` +
+    `and evening. On hot days, those hours can cross the heat-stress limit ` +
+    `just as the afternoon does &mdash; for <strong>${workload.label.toLowerCase()}</strong> ` +
+    `work, that's <em>forecast</em> today in <strong>${summary.citiesWithShoulder} of ` +
+    `${summary.citiesTotal}</strong> cities. The guidance shifts workers out of ` +
+    `one risky window and into another. Among this 50-city sample; not a ` +
+    `national estimate.`;
 
   // KPI cards.
   document.getElementById("kpi-cities").innerHTML =

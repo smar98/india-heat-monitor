@@ -202,6 +202,13 @@ def main():
     if coverage < 0.95:
         raise RuntimeError("join coverage below 95% -- do not ship")
 
+    # Attach proper state names (the CSVs only carry ALLCAPS state rows).
+    with open(POINTS_PATH, "r", encoding="utf-8") as f:
+        state_by_code = {p["code"]: p["state"] for p in json.load(f)}
+    for code, rec in all_districts.items():
+        if code in state_by_code:
+            rec["state"] = state_by_code[code]
+
     output = {
         "meta": {
             "source": "Census of India 2011, table B-04 (main workers by industrial category)",

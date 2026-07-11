@@ -383,6 +383,13 @@ footer a { color: var(--ink-4); }
   color: #eef1f5; text-shadow: 0 0 3px #0f1216, 0 0 3px #0f1216, 0 0 4px #0f1216;
   white-space: nowrap; pointer-events: none;
 }
+.district-tip {
+  background: var(--bg-deep) !important; color: var(--ink) !important;
+  border: 1px solid var(--line-2) !important; border-radius: 6px !important;
+  font-family: var(--font-mono) !important; font-size: 10.5px !important;
+  padding: 4px 8px !important; box-shadow: 0 4px 14px rgba(0,0,0,.5) !important;
+}
+.district-tip::before { display: none !important; }
 .leaflet-popup-content-wrapper {
   background: var(--panel); color: var(--ink); border: 1px solid var(--line-2);
   border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.5);

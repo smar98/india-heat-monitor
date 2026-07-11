@@ -15,6 +15,7 @@
 
 let _headlineCities = null;
 let _headlineLatest = null;
+let _districtStats = null; // { workers, daily } -- for the workers-at-risk leaderboard
 
 function renderWorkloadRail() {
   const host = document.getElementById("workload-rail");
@@ -100,29 +101,46 @@ function renderHeadline() {
   }
   document.getElementById("kpi-band").textContent = `${cityLo}–${cityHi}`;
 
-  // Leaderboard: top cities by overlooked shoulder-hours.
+  renderWorkersLeaderboard();
+  renderSensPanel();
+}
+
+/* Leaderboard: districts ranked by worker-hours at risk today -- the
+ * district layer's own metric (Census-2011 outdoor workers x today's
+ * overlooked hours at the selected workload), so the list and the map can
+ * never disagree. */
+function renderWorkersLeaderboard() {
   const listHost = document.getElementById("overlooked-list");
-  const top = summary.perCity.filter((c) => c.shoulder > 0).slice(0, 6);
+  if (!listHost) return;
+  if (!_districtStats) {
+    listHost.innerHTML = `<p class="empty">Loading district workforce data&hellip;</p>`;
+    return;
+  }
+  const workload = getWorkload();
+  const rows = [];
+  for (const [code, w] of Object.entries(_districtStats.workers.districts)) {
+    const d = _districtStats.daily.districts[code];
+    if (!d) continue;
+    const hours = d.o[workload.key] || 0;
+    if (hours > 0) rows.push({ w, hours, exposure: w.outdoor_workers * hours });
+  }
+  rows.sort((a, b) => b.exposure - a.exposure);
+  const top = rows.slice(0, 6);
   if (top.length === 0) {
     listHost.innerHTML =
-      `<p class="empty">No city crosses the ${workload.label.toLowerCase()}-work limit ` +
-      `outside the afternoon window today. Try a heavier workload, or check back as conditions change.</p>`;
-  } else {
-    listHost.innerHTML = top.map((c) => {
-      const label = c.shoulderHours.map((h) => h.istLabel).join(", ");
-      return `
-        <div class="crow">
-          <div>
-            <div class="nm">${c.name}</div>
-            <div class="st">${c.state}</div>
-            <div class="rs">${label} IST &middot; +${c.insideWindow} inside window</div>
-          </div>
-          <div class="dl">${c.shoulder}<small>HR OUT</small></div>
-        </div>`;
-    }).join("");
+      `<p class="empty">No district has overlooked hours forecast today at ` +
+      `${workload.label.toLowerCase()} workload.</p>`;
+    return;
   }
-
-  renderSensPanel();
+  listHost.innerHTML = top.map(({ w, hours, exposure }) => `
+    <div class="crow">
+      <div>
+        <div class="nm">${w.name}</div>
+        <div class="st">${w.state || ""}</div>
+        <div class="rs">&asymp;${formatWorkerCount(w.outdoor_workers)} outdoor workers &times; ${hours} hr overlooked</div>
+      </div>
+      <div class="dl">${formatWorkerCount(exposure)}<small>WORKER-HRS</small></div>
+    </div>`).join("");
 }
 
 /* "By workload": cities affected at each workload's REL -- the same forecast
@@ -155,6 +173,20 @@ async function initHeadline() {
   document.addEventListener("workloadchange", () => {
     renderWorkloadRail();
     renderHeadline();
+  });
+
+  // The leaderboard's two district files (~110KB total; the big boundary
+  // geometry is NOT needed here) load after the main view renders.
+  Promise.all([
+    fetch("data/district_workers.json").then((r) => r.json()),
+    fetch("data/districts_daily.json").then((r) => r.json()),
+  ]).then(([workers, daily]) => {
+    _districtStats = { workers, daily };
+    renderWorkersLeaderboard();
+  }).catch((err) => {
+    console.error(err);
+    const el = document.getElementById("overlooked-list");
+    if (el) el.innerHTML = '<p class="empty">Could not load district workforce data.</p>';
   });
 }
 

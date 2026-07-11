@@ -258,11 +258,7 @@ async function initMap() {
     return { workers: w, hours, maxWbgt: d.max_wbgt, exposure: w.outdoor_workers * hours };
   }
 
-  function fmtWorkerHours(x) {
-    if (x >= 1e6) return `${(x / 1e6).toFixed(1)}M`;
-    if (x >= 1e3) return `${Math.round(x / 1e3)}k`;
-    return String(Math.round(x));
-  }
+  const fmtWorkerHours = formatWorkerCount; // shared formatter from data.js
 
   function computeDistrictBins() {
     const values = [];
@@ -277,7 +273,11 @@ async function initMap() {
     districtBins = [q(0.4), q(0.7), q(0.9), q(0.98)];
   }
 
-  const DISTRICT_COLORS = [warmRamp(0.12), warmRamp(0.42), warmRamp(0.7), warmRamp(0.88), warmRamp(1)];
+  // Sequential class ramp: ONE hue with monotonically increasing lightness
+  // (13.5x relative-luminance spread bottom->top), because on a dark map
+  // lightness -- not hue wobble -- is what reads as magnitude. Brightest =
+  // most worker-hours at risk.
+  const DISTRICT_COLORS = ["#452e20", "#74432a", "#a55931", "#d97438", "#ff9a52"];
   const DISTRICT_ZERO = "#2a323c";
   const DISTRICT_NODATA = "#20262c";
 
@@ -328,7 +328,14 @@ async function initMap() {
     computeDistrictBins();
     if (!districtLayer) {
       districtLayer = L.geoJSON(districtBundle.geo, { style: districtStyle });
-      districtLayer.eachLayer((lyr) => lyr.bindPopup(() => districtPopupHtml(lyr.feature)));
+      districtLayer.eachLayer((lyr) => {
+        lyr.bindPopup(() => districtPopupHtml(lyr.feature));
+        // Hover = name; click = the full story. Sticky so it follows the cursor.
+        const p = lyr.feature.properties;
+        lyr.bindTooltip(`${p.DISTRICT} · ${p.ST_NM}`, {
+          sticky: true, direction: "top", className: "district-tip", opacity: 1,
+        });
+      });
     } else {
       districtLayer.setStyle(districtStyle);
     }

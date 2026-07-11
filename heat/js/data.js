@@ -141,6 +141,13 @@ function formatIstDateLong(dateKey) {
   return `${month} ${Number(dateKey.slice(8, 10))}`;
 }
 
+/** 4,200,000 -> "4.2M"; 61,500 -> "62k" (worker/worker-hour figures). */
+function formatWorkerCount(x) {
+  if (x >= 1e6) return `${(x / 1e6).toFixed(1)}M`;
+  if (x >= 1e3) return `${Math.round(x / 1e3)}k`;
+  return String(Math.round(x));
+}
+
 // ---------------------------------------------------------------------------
 // Workload levels + the REL work-stress threshold that depends on them.
 //

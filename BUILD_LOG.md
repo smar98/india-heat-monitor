@@ -463,3 +463,17 @@ measures them.
 integrity gates above; live fetch of all 640 districts; in-browser check
 of layer switching, workload re-binning (Light and Heavy produce different
 quantile scales), popup content, and city-dot restoration.
+
+**Post-ship polish (same day, from review):** the choropleth's class ramp
+was rebuilt after feedback that classes read too alike — the original five
+steps varied mostly in hue at similar lightness, and on a dark map
+lightness is what reads as magnitude. The new single-hue ramp spans a
+13.5× relative-luminance range with monotonic steps (validated
+numerically, per the dataviz method: compute, don't eyeball). Districts
+gained hover tooltips (name · state) so identification doesn't require a
+click. The "most overlooked" city list became "Most workers at risk
+today" — districts ranked by the layer's own worker-hours metric, so the
+list and the map can never disagree. And a third workforce cross-check
+was added: the 640-district file's category sums match the Census's own
+separately-published national B-04 row exactly, to the person, in all
+three categories (190,206,741 + 1,801,326 + 20,003,533 = 212,011,600).

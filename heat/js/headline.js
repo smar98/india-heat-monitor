@@ -79,9 +79,17 @@ function renderHeadline() {
     `one risky window and into another. Among this 50-city sample; not a ` +
     `national estimate.`;
 
-  // KPI cards.
+  // KPI cards. The city count's bar is "at least one hour" -- say so, and
+  // give the depth distribution descriptively. NIOSH's limit applies to
+  // each hour of continuous work; it defines no hours-per-day threshold,
+  // so none is invented here (see methods).
+  const deep = summary.perCity.filter((c) => c.shoulder >= 3).length;
   document.getElementById("kpi-cities").innerHTML =
     `${summary.citiesWithShoulder} <small>/ ${summary.citiesTotal}</small>`;
+  document.getElementById("kpi-cities-k").innerHTML =
+    `Cities forecast to have at least one overlooked work-stress hour today` +
+    (deep > 0 ? ` &mdash; <strong>${deep}</strong> of them for 3+ hours` : ``) +
+    `. Among this 50-city sample`;
   document.getElementById("kpi-hours").textContent = summary.totalShoulderHours;
   document.getElementById("kpi-hours-k").innerHTML =
     `City-hours outside the window, over the limit, sun up &mdash; forecast, not observed` +

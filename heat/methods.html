@@ -245,11 +245,16 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
     </p>
     <h3>City list</h3>
     <p>
-      50 large Indian cities: the biggest by population, with deliberate
-      substitutions so humid coastal and eastern India are well represented
-      rather than the sample being dominated by drier, better-known
-      northern cities &mdash; which matters for reading the headline count.
-      Coordinates from
+      50 large Indian cities: the top 50 by population, with exactly
+      <strong>three substitutions</strong>, named so the choice can be
+      audited &mdash; Kota, Bareilly, and Solapur (each climatically
+      redundant with cities already on the list) were swapped for
+      Bhubaneswar, Kochi, and Puducherry, so humid coastal and eastern
+      India are represented rather than a strict population cutoff drying
+      out the sample. The swaps were made when the list was built, before
+      any results existed, and at most those three cities of any day's
+      count can be substitutes &mdash; they cannot drive a headline that
+      moves by tens of cities. Coordinates from
       <a href="https://github.com/Vynex/indian-cities-geodata">Vynex/indian-cities-geodata</a>
       (Apache 2.0; based on Census 2011 and Google Maps).
     </p>
@@ -293,6 +298,19 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
       is near zero, so a high night value is essentially humid heat
       (wet-bulb) &mdash; which IMD's &ldquo;warm night&rdquo; category
       already speaks to.
+    </p>
+    <p>
+      <strong>The city count's bar is one hour.</strong> A city enters the
+      headline count with a single overlooked hour, and the KPI label says
+      so, alongside how many cities have three or more. That
+      three-hour figure is descriptive, not a risk threshold: NIOSH's REL
+      is a ceiling for each hour of continuous work (a 1-hour
+      time-weighted average) &mdash; the criteria document prescribes
+      work/rest cycling and controls whenever an hour exceeds it, and
+      defines no hours-per-day dose above which risk steps up. Inventing
+      such a cutoff here would be unsourced, so depth of exposure is
+      reported as plain counts (total city-hours, the per-city clock)
+      instead.
     </p>
     <p>
       The 11am&ndash;5pm window is the <strong>union</strong> of the

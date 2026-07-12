@@ -54,5 +54,7 @@ jobs:
             echo "No data changes, nothing to commit."
           else
             git commit -m "Update heat data: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            # Rebase after committing in case another workflow pushed mid-run.
+            git pull --rebase
             git push
           fi

@@ -40,11 +40,13 @@ jobs:
         run: |
           git config user.name "heat-monitor-bot"
           git config user.email "actions@github.com"
-          git pull --rebase
           git add heat/data/districts_daily.json
           if git diff --cached --quiet; then
             echo "No data changes, nothing to commit."
           else
             git commit -m "Update district daily heat: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            # Commit BEFORE pulling: the 3-hourly city workflow pushes often,
+            # and `pull --rebase` refuses to run over the unstaged fetch output.
+            git pull --rebase
             git push
           fi

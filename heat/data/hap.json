@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "note": "Display-only policy audit. The dashboard's computed avoidance window is always the 11am-5pm union of the audited windows below; nothing here feeds the computation. Verbatim quotes and page numbers match the methods-page HAP source table.",
+    "audited_scope": "Four plans audited to primary sources, plus the national advisory line. 'Not audited' means not audited here - not that the state has no plan."
+  },
+  "national": {
+    "issuer": "NDMA/IMD national advisory",
+    "window_text": "Avoid going out in the sun, especially between 12.00 noon and 3.00 p.m.",
+    "window_display": "12 noon–3pm",
+    "source_url": "https://ddma.delhi.gov.in/sites/default/files/ddma/generic_multiple_files/final_hap_12.04.2024.pdf",
+    "source_note": "standard national do's-and-don'ts line, reproduced verbatim in the DDMA Delhi HAP 2024–25, p. 54"
+  },
+  "plans": {
+    "Odisha": {
+      "plan": "Odisha — OSDMA Heat Action Plan 2018",
+      "level": "state",
+      "window_display": "avoid 11am–3:30pm",
+      "window_text": "The working hours for daily labourers need to be re-scheduled i.e. from 6 a.m. to 11 a.m. and 3.30 pm to 6 pm.",
+      "source_url": "https://www.osdma.org/heat-wave/",
+      "source_page": "Ch. 3 (SOP)",
+      "source_note": "accessed via a document mirror; the OSDMA PDF did not serve directly",
+      "short": "OSDMA 2018"
+    },
+    "Andhra Pradesh": {
+      "plan": "Andhra Pradesh — APSDMA Heat Wave Action Plan 2020",
+      "level": "state",
+      "window_display": "avoid 12–4pm",
+      "window_text": "Encourage employers to shift outdoor workers schedules away from peak afternoon hours (12 – 4pm) during a heat alert.",
+      "source_url": "https://apsdma.ap.gov.in/latestupdate_pdfs/heatwave/Heat_Wave_Action_Plan_2020.pdf",
+      "source_page": "p. 36",
+      "short": "APSDMA 2020"
+    },
+    "Gujarat": {
+      "plan": "Ahmedabad (AMC) Heat Action Plan, 2019 Update",
+      "level": "city",
+      "level_note": "a city plan — Ahmedabad's is India's first and flagship HAP; Gujarat cities outside Ahmedabad are shown this as the nearest audited plan, not their own",
+      "window_display": "avoid 1–5pm",
+      "window_text": "Change working hours of labourers. Encourage employers to shift outdoor workers' schedules away from peak afternoon hours (1pm – 5pm) during a heat alert.",
+      "source_url": "https://www.nrdc.org/sites/default/files/ahmedabad-heat-action-plan-2019-update.pdf",
+      "source_page": "p. 17",
+      "short": "Ahmedabad AMC 2019"
+    },
+    "Delhi": {
+      "plan": "Delhi — DDMA Heat Action Plan 2024–25",
+      "level": "state",
+      "window_display": "avoid 1–5pm; work 7am–1pm & 4–6pm",
+      "window_text": "Encourage employers to shift outdoor workers' schedules away from peak afternoon hours (1pm–5pm) during Heat alert. Working Hours will be from 7:00am to 1:00pm, 4:00pm to 6:00pm.",
+      "source_url": "https://ddma.delhi.gov.in/sites/default/files/ddma/generic_multiple_files/final_hap_12.04.2024.pdf",
+      "source_page": "p. 34",
+      "short": "DDMA 2024-25"
+    }
+  },
+  "cpr": {
+    "title": "How Is India Adapting to Heatwaves? An Assessment of Heat Action Plans With Insights for Transformative Climate Action (Centre for Policy Research, March 2023)",
+    "url": "https://cprindia.org/wp-content/uploads/2023/03/Heat-Report_27March-23_Updated-Table.pdf",
+    "plans_reviewed": 37,
+    "quote_legal": "HAPs have weak legal foundations. None of the HAPs indicate the legal sources of their authority.",
+    "quote_funding": "HAPs are underfunded. Only 11 of 37 HAPs discuss funding sources. Of these, eight asked implementing departments to self-allocate resources, indicating a serious funding constraint.",
+    "source_page": "p. 3 (executive summary)",
+    "note": "CPR's findings are aggregate across the 37 plans it reviewed (2016-2022); it does not publish per-plan flags, so none are shown per plan here."
+  }
+}

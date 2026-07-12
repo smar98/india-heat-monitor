@@ -53,7 +53,9 @@ const MAP_THEME = {
   land: "#1c2229",
   border: "#2f3945",
   zero: "#4a5460",
-  warm: ["#c9b79a", "#e0913a", "#ef6a3a"], // ramp for "more heat stress"
+  // One orange family, light -> dark, dark = worse (same scale the district
+  // layer uses, so every layer reads the same way).
+  warm: ["#fbdcb2", "#e07f33", "#8f3d08"],
   cool: "#7f9fb0",                          // anomaly negative end
   dotStroke: "rgba(0,0,0,.5)",
   glow: "drop-shadow(0 0 4px rgba(239,106,58,.55))",
@@ -186,7 +188,20 @@ async function initMap() {
       <div class="popup-row"><span class="label">Current wet-bulb</span><span class="value">${record.currentWetBulb != null ? record.currentWetBulb.toFixed(1) + "&deg;C" : "n/a"}</span></div>
       ${record.wetBulbAnomaly != null ? `<div class="popup-row"><span class="label">vs. 1991-2020 normal</span><span class="value">${record.wetBulbAnomaly >= 0 ? "+" : ""}${record.wetBulbAnomaly.toFixed(1)}&deg;C</span></div>` : ""}
       ${shoulderLine}
+      ${hapPopupLine(record.state)}
     `;
+  }
+
+  /* One-line policy pointer, fed by hap.json via hap-card.js (display-only;
+   * the computed window is always the 11-5 union). Silently absent until
+   * that file loads or if it fails. */
+  function hapPopupLine(state) {
+    if (typeof _hap === "undefined" || !_hap) return "";
+    const plan = _hap.plans[state];
+    const text = plan
+      ? `State HAP on paper: ${plan.window_display} (${plan.short})`
+      : `State HAP window not audited here &mdash; count uses the widest audited window (11&ndash;5)`;
+    return `<div class="popup-row" style="color:#8b95a1;font-size:11px;">${text}</div>`;
   }
 
   for (const record of records) {
@@ -277,7 +292,10 @@ async function initMap() {
   // (13.5x relative-luminance spread bottom->top), because on a dark map
   // lightness -- not hue wobble -- is what reads as magnitude. Brightest =
   // most worker-hours at risk.
-  const DISTRICT_COLORS = ["#452e20", "#74432a", "#a55931", "#d97438", "#ff9a52"];
+  // Light -> dark within one orange family: darker = more worker-hours at
+  // risk. Verified numerically: monotonic luminance, ~1.5x between adjacent
+  // steps, darkest still 2.2:1 against the landmass.
+  const DISTRICT_COLORS = ["#fbdcb2", "#f2ab62", "#e07f33", "#bc5a14", "#8f3d08"];
   const DISTRICT_ZERO = "#2a323c";
   const DISTRICT_NODATA = "#20262c";
 
@@ -352,7 +370,7 @@ async function initMap() {
         districtBins.map((b, i) => ({ label: `&le;${fmtWorkerHours(b)}`, color: DISTRICT_COLORS[i] })),
         [{ label: `&gt;${fmtWorkerHours(districtBins[districtBins.length - 1])}`, color: DISTRICT_COLORS[4] }]
       );
-      host.innerHTML = `<span>Worker-hours at risk today:</span>` + items.map((s) =>
+      host.innerHTML = `<span>Worker-hours at risk today (darker = more):</span>` + items.map((s) =>
         `<span class="legend-item"><span class="legend-dot" style="width:13px;height:13px;border-radius:3px;background:${s.color};"></span>${s.label}</span>`
       ).join("");
       return;

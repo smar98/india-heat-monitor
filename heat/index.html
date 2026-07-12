@@ -133,12 +133,10 @@
         <div class="rl" style="margin-top:10px">Map layer</div>
         <div id="layer-rail">
           <button type="button" class="layer-btn on" data-layer="overlooked"><span class="d" style="background:#e0713a"></span>Overlooked hours</button>
-          <button type="button" class="layer-btn" data-layer="districts"><span class="d" style="background:#b0563a"></span>Workers at risk, by district</button>
-          <button type="button" class="layer-btn" data-layer="wetbulb"><span class="d" style="background:#c9b79a"></span>Current wet-bulb</button>
+          <button type="button" class="layer-btn" data-layer="districts"><span class="d" style="background:#bc5a14"></span>Workers at risk, by district</button>
+          <button type="button" class="layer-btn" data-layer="wetbulb"><span class="d" style="background:#f2ab62"></span>Current wet-bulb</button>
           <button type="button" class="layer-btn" data-layer="anomaly"><span class="d" style="background:#7fb0a3"></span>Anomaly vs. normal</button>
         </div>
-        <div class="rl" style="margin-top:10px">Coming</div>
-        <div class="layer-soon"><span class="d"></span>State HAP windows<span class="tag">Soon</span></div>
       </div>
 
       <div class="panel">
@@ -176,6 +174,7 @@
           <span><span class="swatch" style="background:#ef6a3a;"></span>Over, outside window, sun up &mdash; overlooked</span>
           <span><span class="swatch" style="background:#6f6486;"></span>Over, after dark (humidity)</span>
         </div>
+        <div id="hap-card" class="hap-card"></div>
       </div>
 
       <div class="panel">
@@ -252,6 +251,7 @@
 <script src="js/headline.js"></script>
 <script src="js/map.js"></script>
 <script src="js/workday-clock.js"></script>
+<script src="js/hap-card.js"></script>
 <script src="js/trend.js"></script>
 </body>
 </html>

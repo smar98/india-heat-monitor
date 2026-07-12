@@ -477,3 +477,23 @@ code {
   #map { height: 340px; }
   .clock-row-label { width: 64px; font-size: 9.5px; }
 }
+
+/* ---- The rule on paper (HAP policy card, under the workday clock) ---- */
+.hap-card { margin: 14px 15px 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.hap-card:empty { display: none; }
+.hap-head {
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px;
+}
+.hap-plan-name { font-size: 12.5px; font-weight: 600; color: var(--ink); margin: 0 0 6px; }
+.hap-quote {
+  margin: 0 0 8px; padding: 8px 12px; border-left: 2px solid var(--line-2);
+  color: var(--ink-2); font-size: 12.5px; font-style: italic;
+}
+.hap-quote .hap-src { font-style: normal; font-size: 11px; color: var(--ink-4); white-space: nowrap; }
+.hap-quote a, .hap-cpr a { color: var(--ink-3); text-decoration: underline; text-underline-offset: 2px; }
+.hap-note { color: var(--ink-3); font-size: 11.5px; margin: 0 0 6px; max-width: 62ch; }
+.hap-cpr {
+  color: var(--ink-4); font-size: 11px; margin: 10px 0 0; max-width: 62ch;
+  border-top: 1px dashed var(--line); padding-top: 8px;
+}

@@ -477,3 +477,35 @@ list and the map can never disagree. And a third workforce cross-check
 was added: the 640-district file's category sums match the Census's own
 separately-published national B-04 row exactly, to the person, in all
 three categories (190,206,741 + 1,801,326 + 20,003,533 = 212,011,600).
+
+## Step 13 — The policy overlay: what the rule on paper actually says (Phase 4)
+
+The last planned layer is words, not weather: for the city you're looking
+at, what does its state's Heat Action Plan actually tell outdoor workers?
+A "rule on paper" card under the workday clock quotes the audited plan
+verbatim (window, plan name, source page, link) for the four
+primary-sourced plans (Odisha 2018, Andhra Pradesh 2020, Ahmedabad 2019,
+Delhi 2024-25); every other state gets an honest "not audited here — the
+count uses the widest audited window, so it stays a conservative lower
+bound." City map popups carry a one-line version. Everything is
+display-only: the computed 11am-5pm union stays the single analysis window.
+
+For teeth, the card and methods page quote the Centre for Policy
+Research's 2023 review of 37 HAPs — none identified the legal source of
+their authority; only 11 discussed funding at all — with page citations.
+One planned feature was cut on source-integrity grounds: per-plan
+governance flags. CPR publishes only aggregate findings, no per-plan
+scorecard, so per-plan flags would have been invented attribution. The
+aggregate quote is labeled as being about India's plans overall, "not a
+grade of this plan."
+
+Also in this pass: both GitHub Actions workflows commit before rebasing
+(a pull-over-unstaged-output race had the daily district job failing
+whenever the 3-hourly job pushed mid-run); the map's warm ramp became one
+light-to-dark orange family across every layer after feedback that
+dark-brown-to-bright-orange read as two colors rather than a scale (the
+caption said "darker = more" — now the colors agree with it); the
+Liljegren accuracy caveat now attributes its ~1°C figure to the paper's
+own U.S. validation sites and says plainly that no Indian
+measured-WBGT validation exists; a root redirect and social-share
+metadata were added.

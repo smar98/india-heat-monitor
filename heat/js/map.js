@@ -47,14 +47,14 @@ const LAYER_DEFS = {
       "very hours guidance recommends.",
   },
   eshram: {
-    label: "Outdoor workforce — 2026 registry",
+    label: "Outdoor workforce — e-Shram registry",
     tag: "e-Shram · registrations",
     caption:
-      "2026 recency check: e-Shram outdoor-sector registrations " +
-      "(agriculture + construction, Ministry of Labour, 2021-26), folded " +
-      "to the 2011 census district frame -- darker = more registered " +
-      "outdoor workers. Districts created after 2011 are counted in " +
-      "their 2011 parent; Telangana's fold into undivided Andhra Pradesh " +
+      "Live recency check: e-Shram outdoor-sector registrations " +
+      "(agriculture + construction, Ministry of Labour, cumulative since " +
+      "2021), folded to the 2011 census district frame -- darker = more " +
+      "registered outdoor workers. Districts created after 2011 are " +
+      "counted in their 2011 parent; Telangana's fold into undivided Andhra Pradesh " +
       "(see popup). Registrations are not a workforce count.",
   },
 };
@@ -268,8 +268,8 @@ async function initMap() {
         fetch("data/india_districts_2011.geojson").then((r) => r.json()),
         fetch("data/district_workers.json").then((r) => r.json()),
         fetch("data/districts_daily.json").then((r) => r.json()),
-        // The 2026 registry layer is optional: if its file is missing the
-        // risk layer must keep working, so a failed fetch resolves to null.
+        // The e-Shram registry layer is optional: if its file is missing
+        // the risk layer must keep working, so a failed fetch resolves to null.
         fetch("data/district_eshram.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ]).then(([geo, workers, daily, eshram]) => {
         districtBundle = { geo, workers, daily, eshram };
@@ -290,8 +290,8 @@ async function initMap() {
   const fmtWorkerHours = formatWorkerCount; // shared formatter from data.js
 
   /* Two district modes share the geometry, ramp, and bin logic:
-   * "risk" (worker-hours at risk today) and "registry" (e-Shram 2026
-   * outdoor registrations). */
+   * "risk" (worker-hours at risk today) and "registry" (e-Shram
+   * cumulative outdoor registrations). */
   function districtMode() {
     return currentLayer === "eshram" ? "registry" : "risk";
   }
@@ -384,6 +384,7 @@ async function initMap() {
   function registryPopupHtml(p) {
     const e = districtBundle.eshram && districtBundle.eshram.districts[String(p.censuscode)];
     const w = districtBundle.workers.districts[String(p.censuscode)];
+    const asOf = (districtBundle.eshram && districtBundle.eshram.meta && districtBundle.eshram.meta.as_of) || "unknown date";
     const telanganaNote = TELANGANA_FOLDED_INTO_AP.has(p.censuscode)
       ? `<div class="popup-row" style="color:#8b95a1;font-size:11px;">2011 frame: includes districts now in Telangana.</div>`
       : "";
@@ -396,10 +397,10 @@ async function initMap() {
     return `
       <div class="popup-city">${p.DISTRICT}</div>
       <div class="popup-state">${p.ST_NM}</div>
-      <div class="popup-row"><span class="label">Registered, agriculture (2026)</span><span class="value">${fmtWorkerHours(e.agri)}</span></div>
-      <div class="popup-row"><span class="label">Registered, construction (2026)</span><span class="value">${fmtWorkerHours(e.constr)}</span></div>
+      <div class="popup-row"><span class="label">Registered, agriculture</span><span class="value">${fmtWorkerHours(e.agri)}</span></div>
+      <div class="popup-row"><span class="label">Registered, construction</span><span class="value">${fmtWorkerHours(e.constr)}</span></div>
       <div class="popup-row"><span class="label">Outdoor workers (Census 2011)</span><span class="value">${w ? fmtWorkerHours(w.outdoor_workers) : "n/a"}</span></div>
-      <div class="popup-row" style="color:#8b95a1;font-size:11px;">Registrations (unorganised workers, ages 16&ndash;59, since 2021) &mdash; not a headcount, and not the risk layer's input.</div>
+      <div class="popup-row" style="color:#8b95a1;font-size:11px;">Registrations (unorganised workers, ages 16&ndash;59) cumulative since 2021, as of ${asOf} &mdash; not a headcount, and not the risk layer's input.</div>
       ${telanganaNote}
     `;
   }
@@ -433,7 +434,7 @@ async function initMap() {
         [{ label: `&gt;${fmtWorkerHours(districtBins[districtBins.length - 1])}`, color: DISTRICT_COLORS[4] }]
       );
       const title = currentLayer === "eshram"
-        ? "Registered outdoor workers, 2026 (darker = more):"
+        ? "Registered outdoor workers, cumulative (darker = more):"
         : "Worker-hours at risk today (darker = more):";
       host.innerHTML = `<span>${title}</span>` + items.map((s) =>
         `<span class="legend-item"><span class="legend-dot" style="width:13px;height:13px;border-radius:3px;background:${s.color};"></span>${s.label}</span>`
@@ -494,7 +495,7 @@ async function initMap() {
         return;
       }
       if (currentLayer === "eshram" && !districtBundle.eshram) {
-        captionEl.textContent = "The 2026 registry file isn't published yet — the layer lights up automatically once it lands.";
+        captionEl.textContent = "The e-Shram registry file isn't published yet — the layer lights up automatically once it lands.";
         renderLegend();
         return;
       }
@@ -506,7 +507,7 @@ async function initMap() {
         // own recorded validation stats.
         const meta = districtBundle.eshram.meta || {};
         caveat = meta.spearman_vs_census_outdoor
-          ? ` District-for-district, this 2026 geography agrees closely with the Census-2011 outdoor-workforce map (rank correlation ${meta.spearman_vs_census_outdoor}, as of ${meta.as_of}) — the risk layer isn't leaning on a stale picture.`
+          ? ` District-for-district, this registry geography agrees closely with the Census-2011 outdoor-workforce map (rank correlation ${meta.spearman_vs_census_outdoor}, snapshot as of ${meta.as_of}) — the risk layer isn't leaning on a stale picture.`
           : "";
       } else {
         // Vintage + staleness, stated with the layer, not buried: workforce

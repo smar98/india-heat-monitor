@@ -510,7 +510,7 @@ own U.S. validation sites and says plainly that no Indian
 measured-WBGT validation exists; a root redirect and social-share
 metadata were added.
 
-## Step 14 — A 2026 recency check on the workforce map (e-Shram)
+## Step 14 — A live recency check on the workforce map (e-Shram)
 
 The district worker-hours layer weights districts by Census-2011 outdoor
 main-worker counts — accurate structure, but 15 years old. This step adds
@@ -558,9 +558,19 @@ parents, get their own disclosure in both methods and the map popup
 itself, so a reader who knows Telangana exists doesn't read "Warangal,
 Andhra Pradesh" as a bug.
 
-Shipped as a fourth map layer ("Outdoor workforce — 2026 registry"),
+Shipped as a fourth map layer ("Outdoor workforce — e-Shram registry"),
 sharing the district geometry, ramp, and legend logic with the existing
 worker-hours layer. Ship gates were tightened after the fact (coverage
 ≥98%, unmatched ≤1%, rank correlation ≥0.8) so they now catch future
 drift — new districts India creates after this build — rather than
 re-litigating the gap this step just closed.
+
+**Correction (same day):** the layer initially shipped as "2026 registry"
+and its copy said registrations were "2021-26" — wrong. e-Shram
+registrations are a live cumulative total dating back to the portal's
+2021 launch; only the harvest/snapshot is dated 2026. Calling it a "2026
+registry" read as if the data were scoped to 2026 signups. Renamed to
+"e-Shram registry" everywhere (layer label, methods heading, popup rows,
+legend, caveat text); the actual snapshot date now surfaces dynamically
+from the data file (`meta.as_of`) instead of being hardcoded into copy
+that would otherwise go stale.

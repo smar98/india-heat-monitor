@@ -206,11 +206,23 @@ details.explainer[open] summary { border-bottom: 1px solid var(--line); color: v
   display: flex; align-items: center; gap: 9px; padding: 8px 10px;
   border-radius: 8px; background: var(--chip); border: 1px solid var(--line-2);
   font-size: 12px; cursor: pointer; color: #c9d0d9; width: 100%; text-align: left;
-  font-family: var(--font-body); transition: all .12s;
+  font-family: var(--font-body); transition: all .12s; position: relative;
 }
 .layer-btn.on { border-color: var(--orange); background: rgba(224,113,58,.1); color: var(--ink-hi); }
 .layer-btn:hover:not(.on) { border-color: #3a424d; }
 .layer-btn .d { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+.layer-btn .info { color: var(--ink-5); font-size: 11px; margin-left: auto; flex: none; }
+.layer-btn:hover .info, .layer-btn:focus-visible .info { color: var(--orange-mid); }
+/* hover/focus explainer card, fed by data-tip (what each map layer shows) */
+.layer-btn:hover::after, .layer-btn:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 1200;
+  width: 240px; padding: 9px 11px;
+  background: var(--bg-deep); border: 1px solid var(--line-2); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.55);
+  font-size: 11.5px; line-height: 1.45; color: var(--ink-2);
+  white-space: normal; text-align: left; pointer-events: none;
+}
 .layer-soon {
   display: flex; align-items: center; gap: 9px; padding: 8px 10px;
   border-radius: 8px; background: var(--chip); border: 1px dashed var(--line-2);

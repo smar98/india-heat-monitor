@@ -599,3 +599,43 @@ The wet-bulb temperature concept itself is untouched — it's still the
 first stage of the WBGT pipeline (Stull wet-bulb → Liljegren WBGT → NIOSH
 REL) and still explained in the glossary; only the standalone map layers
 built on it are gone.
+
+## Step 16 — HAP panel promoted, trend panel made collapsible, correlation cross-referenced (2026-07-13)
+
+Three small fixes from an owner read-through, planned with a second model
+(Fable) as advisor and reviewed after implementation:
+
+**The HAP policy card was reading as a footnote.** It had real content —
+a verbatim quoted work-hour window with a source link, plus the CPR-2023
+governance finding — but sat as the last element under the workday
+clock's color legend, styled at 10.5-12.5px. Gave it its own full-width
+panel (`#hap-panel`, between the lower row and the trend panel), split
+into two columns: the selected state's audited plan on the left, the
+national CPR finding on the right — the visual split itself enforces
+that the CPR numbers are a national governance finding, not a grade of
+whichever city is selected. `hap.json`'s audited scope is unchanged (4
+states/cities + the national advisory); the "not audited here" fallback
+is unchanged. No new content was invented — same verbatim quotes, same
+sourced numbers, new hierarchy.
+
+**"The long view" is now collapsible**, using the same `<details>`
+pattern as the existing explainer/glossary sections, closed by default
+(the site's established convention for "secondary to today's snapshot").
+Confirmed before shipping that the trend chart's SVG uses a fixed
+viewBox scaled by CSS, not a live width measurement, so it renders
+correctly the first time the panel opens — no layout bug from starting
+hidden. The lazy-load listeners (`citychange`, `workloadchange`) and the
+3-second fallback fetch of `trends.json` are untouched and still fire
+regardless of open/closed state.
+
+**The census/e-Shram correlation (0.81) now shows up where it's actually
+useful.** It defends the "Workers at risk" layer's use of a 15-year-old
+census against the objection that it's stale — but the one sentence
+citing it only rendered on the e-Shram layer's own caption, which a user
+viewing the risk layer would never see. Added a one-line cross-reference
+to the risk layer's caption pointing at it, and added a caution to the
+methods-page paragraph: both series are absolute counts, so part of the
+0.81 agreement is district size, not corroboration of the census levels
+themselves — the check is still the right one for a layer that ranks by
+absolute worker-hours, just not evidence of anything beyond ranking
+agreement.

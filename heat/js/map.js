@@ -459,6 +459,10 @@ async function initMap() {
         // Vintage + staleness, stated with the layer, not buried: workforce
         // shares are 2011; the heat summary is dated and refreshed daily.
         caveat = ` Workforce: Census 2011 (structure moves slowly, but it is 2011 — post-2011 districts appear within parent boundaries). One forecast point per district, ~25 km grid.`;
+        const esMeta = districtBundle.eshram && districtBundle.eshram.meta;
+        if (esMeta && esMeta.spearman_vs_census_outdoor) {
+          caveat += ` Cross-checked against the live e-Shram registry (rank correlation ${esMeta.spearman_vs_census_outdoor} — switch to the e-Shram layer for detail).`;
+        }
         const todayIst = nowInIst().dateKey;
         if (districtBundle.daily.ist_date !== todayIst) {
           caveat = ` ⚠ District heat shown is for ${districtBundle.daily.ist_date} (IST) — today's refresh hasn't landed yet.` + caveat;

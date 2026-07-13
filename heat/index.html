@@ -179,7 +179,6 @@
           <span><span class="swatch" style="background:#ef6a3a;"></span>Over, outside window, sun up &mdash; overlooked</span>
           <span><span class="swatch" style="background:#6f6486;"></span>Over, after dark (humidity)</span>
         </div>
-        <div id="hap-card" class="hap-card"></div>
       </div>
 
       <div class="panel">
@@ -190,8 +189,13 @@
 
     </div>
 
-    <div class="panel trend-row" id="trend-panel">
-      <div class="ph"><h3>The long view &mdash; has the blind spot grown?</h3><span class="t" id="trend-panel-tag">ERA5 &middot; 1980&ndash;2024</span></div>
+    <div class="panel hap-row" id="hap-panel" hidden>
+      <div class="ph"><h3>The rule on paper &mdash; what the plans tell outdoor workers</h3><span class="t">state HAP audit &middot; verbatim</span></div>
+      <div id="hap-card" class="hap-card"></div>
+    </div>
+
+    <details class="panel trend-row" id="trend-panel">
+      <summary class="ph"><h3>The long view &mdash; has the blind spot grown?</h3><span class="t" id="trend-panel-tag">ERA5 &middot; 1980&ndash;2024</span></summary>
       <div class="trend-body">
         <div class="trend-takeaway" id="trend-takeaway"></div>
         <div class="trend-legend" id="trend-legend">
@@ -214,7 +218,7 @@
           selected above.
         </p>
       </div>
-    </div>
+    </details>
 
     <div class="fine-print">
       &ldquo;Outside the window&rdquo; uses 11am&ndash;5pm &mdash; the widest

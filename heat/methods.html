@@ -230,19 +230,6 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
       wind speed, and surface pressure for all ~50 cities, refreshed
       automatically every 3 hours.
     </p>
-    <h3>1991&ndash;2020 historical normal</h3>
-    <p>
-      Open-Meteo's Historical Weather API (ERA5 reanalysis), pulled once
-      per city (not on the live schedule) for 1991&ndash;2020, collapsed
-      to per-calendar-date climatological means and maxima for both
-      dry-bulb and wet-bulb temperature.
-    </p>
-    <p class="caveat">
-      ERA5 is a global reanalysis on a roughly 25&ndash;31km grid &mdash;
-      it is not a street-level station reading, and a real city's
-      microclimate (urban heat island effects, a specific neighborhood's
-      conditions) can differ from the grid-cell value shown here.
-    </p>
     <h3>City list</h3>
     <p>
       50 large Indian cities: the top 50 by population, with exactly
@@ -426,8 +413,7 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
       <strong>Data.</strong> Hourly ERA5 reanalysis (temperature, relative
       humidity, shortwave radiation, wind, surface pressure) from the
       <a href="https://open-meteo.com/en/docs/historical-weather-api">Open-Meteo
-      Historical Weather API</a> &mdash; the same source family as the
-      1991&ndash;2020 normals. Computed once and published as a static
+      Historical Weather API</a>. Computed once and published as a static
       dataset; the script that builds it is in the public repository.
     </p>
     <p>

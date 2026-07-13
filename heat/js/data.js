@@ -17,25 +17,22 @@
 const DATA_BASE = "data";
 
 // headline.js, map.js, and workday-clock.js each call loadAllData() on the
-// same page load -- without caching, that's three separate fetches of
-// normals.json (~3.7MB) alone. Cache the one in-flight/completed request so
-// every caller shares it.
+// same page load. Cache the one in-flight/completed request so every caller
+// shares it instead of double-fetching cities.json/latest.json.
 let _loadAllDataPromise = null;
 
 function loadAllData() {
   if (!_loadAllDataPromise) {
     _loadAllDataPromise = (async () => {
-      const [citiesResp, latestResp, normalsResp] = await Promise.all([
+      const [citiesResp, latestResp] = await Promise.all([
         fetch(`${DATA_BASE}/cities.json`),
         fetch(`${DATA_BASE}/latest.json`),
-        fetch(`${DATA_BASE}/normals.json`),
       ]);
-      const [cities, latest, normals] = await Promise.all([
+      const [cities, latest] = await Promise.all([
         citiesResp.json(),
         latestResp.json(),
-        normalsResp.json(),
       ]);
-      return { cities, latest, normals };
+      return { cities, latest };
     })();
   }
   return _loadAllDataPromise;
@@ -63,29 +60,16 @@ function istDateKeyOf(timeIstString) {
   return timeIstString.slice(0, 10);
 }
 
-// Note on normals keying: normals.json aggregates ERA5 hours into UTC
-// calendar dates (the one-time compute_normals.py run requested
-// timezone=UTC), while the live pipeline works in IST calendar days. We
-// look up the normal for today's IST date's "MM-DD". At worst this pairs
-// an IST day against a normal whose 24-hour aggregation window is offset
-// by 5.5 hours -- for a 30-year climatological average that changes the
-// value by well under 0.1 degC day-to-day, so it's an accepted
-// approximation (documented in BUILD_LOG.md step 7), not an oversight.
-
 /**
- * Builds one record per city for the MAP's secondary layers: the current
- * wet-bulb reading (hour nearest the real moment) and the anomaly of today's
- * peak wet-bulb vs. the 1991-2020 normal for this calendar date. Cities with
- * no valid hourly data today are skipped (not zero-filled) so a data gap
- * can't silently masquerade as "no risk." The overlooked-hours work-stress
- * numbers are computed separately (computeCityWorkStress / *Summary), not
- * here.
+ * Builds one identity record per city for the MAP (id/name/state/lat/lon).
+ * Cities with no valid hourly data today are skipped (not zero-filled) so a
+ * data gap can't silently masquerade as "no risk." The overlooked-hours
+ * work-stress numbers are computed separately (computeCityWorkStress /
+ * *Summary), not here.
  */
-function buildCityMetrics(cities, latest, normals) {
+function buildCityRecords(cities, latest) {
   const cityById = new Map(cities.map((c) => [c.id, c]));
-  const normalsById = normals.cities; // keyed by string(id) in normals.json
-  const { dateKey: todayIstDateKey, nowUtcMs } = nowInIst();
-  const todayKey = todayIstDateKey.slice(5); // "MM-DD" for the normals lookup
+  const { dateKey: todayIstDateKey } = nowInIst();
 
   const records = [];
   for (const cityLatest of latest.cities) {
@@ -95,34 +79,7 @@ function buildCityMetrics(cities, latest, normals) {
     const todayHours = cityLatest.hourly.filter((h) => istDateKeyOf(h.time_ist) === todayIstDateKey);
     if (todayHours.length === 0) continue; // data hasn't refreshed for today's IST date yet
 
-    const wetBulbValues = todayHours.map((h) => h.wet_bulb_c).filter((v) => v != null);
-    const peakWetBulb = wetBulbValues.length ? Math.max(...wetBulbValues) : null;
-
-    // "Current" = the hour whose true UTC instant is nearest the real
-    // current moment (not the first array entry -- see BUILD_LOG.md step 7).
-    const nearestHour = [...cityLatest.hourly].sort(
-      (a, b) => Math.abs(new Date(a.time_utc + "Z").getTime() - nowUtcMs) -
-                Math.abs(new Date(b.time_utc + "Z").getTime() - nowUtcMs)
-    )[0];
-    const currentWetBulb = nearestHour ? nearestHour.wet_bulb_c : null;
-
-    const cityNormals = normalsById[String(city.id)];
-    const normalToday = cityNormals ? cityNormals.normals_by_date[todayKey] : null;
-    const wetBulbAnomaly =
-      normalToday && peakWetBulb != null
-        ? peakWetBulb - normalToday.normal_max_wet_bulb_c
-        : null;
-
-    records.push({
-      id: city.id,
-      name: city.name,
-      state: city.state,
-      lat: city.lat,
-      lon: city.lon,
-      currentWetBulb,
-      wetBulbAnomaly,
-      normalMaxWetBulb: normalToday ? normalToday.normal_max_wet_bulb_c : null,
-    });
+    records.push({ id: city.id, name: city.name, state: city.state, lat: city.lat, lon: city.lon });
   }
   return records;
 }

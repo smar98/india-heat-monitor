@@ -2,7 +2,7 @@
  * Interactive India map (Leaflet). Default layer: today's overlooked hours
  * per city (work-stress hours outside the 11am-5pm avoidance window, sun up,
  * at the selected workload) -- the same metric as the headline, spatially.
- * Toggle layers: current wet-bulb, and anomaly vs the 1991-2020 normal.
+ * Toggle layers: district worker-hours at risk, and the e-Shram registry.
  *
  * Dark console restyle: no raster basemap -- the vendored India state
  * GeoJSON is rendered as a dark landmass (design-handoff tokens), which
@@ -19,21 +19,6 @@ const LAYER_DEFS = {
       "window, with the sun up, at the selected workload -- the morning and " +
       "evening hours guidance tells workers to shift into. Bigger, brighter " +
       "dots = more overlooked hours.",
-  },
-  wetbulb: {
-    label: "Current wet-bulb",
-    tag: "Wet-bulb · now",
-    caption:
-      "Wet-bulb temperature right now (Stull 2011 approximation): how well " +
-      "sweating can still cool a person once humidity is counted. A separate " +
-      "physiology reading, not the work-stress count.",
-  },
-  anomaly: {
-    label: "Anomaly vs. 1991-2020 normal",
-    tag: "Anomaly · vs normal",
-    caption:
-      "Today's peak wet-bulb minus the climatological normal peak wet-bulb " +
-      "for this calendar date (1991-2020, Open-Meteo/ERA5).",
   },
   districts: {
     label: "Workers at risk, by district",
@@ -67,7 +52,6 @@ const MAP_THEME = {
   // One orange family, light -> dark, dark = worse (same scale the district
   // layer uses, so every layer reads the same way).
   warm: ["#fbdcb2", "#e07f33", "#8f3d08"],
-  cool: "#7f9fb0",                          // anomaly negative end
   dotStroke: "rgba(0,0,0,.5)",
   glow: "drop-shadow(0 0 4px rgba(239,106,58,.55))",
 };
@@ -91,20 +75,9 @@ function colorForOverlooked(count, maxCount) {
   return warmRamp(count / (maxCount || 1));
 }
 
-function colorForSequential(value, min, max) {
-  const t = max > min ? (value - min) / (max - min) : 0.5;
-  return warmRamp(t);
-}
-
-function colorForAnomaly(anomaly, maxAbs) {
-  const t = Math.max(-1, Math.min(1, anomaly / (maxAbs || 1)));
-  if (t >= 0) return warmRamp(t);
-  return _mix(MAP_THEME.zero, MAP_THEME.cool, -t);
-}
-
 async function initMap() {
-  const { cities, latest, normals } = await loadAllData();
-  const records = buildCityMetrics(cities, latest, normals);
+  const { cities, latest } = await loadAllData();
+  const records = buildCityRecords(cities, latest);
 
   // Per-city work-stress breakdown at the currently selected workload,
   // recomputed on workloadchange so the default layer and popups stay live.
@@ -148,38 +121,21 @@ async function initMap() {
       for (const { marker } of markers) marker.bringToFront();
     });
 
-  const wetBulbValues = records.map((r) => r.currentWetBulb).filter((v) => v != null);
-  const minWetBulb = Math.min(...wetBulbValues);
-  const maxWetBulb = Math.max(...wetBulbValues);
-  const anomalyValues = records.map((r) => r.wetBulbAnomaly).filter((v) => v != null);
-  const maxAbsAnomaly = anomalyValues.length ? Math.max(...anomalyValues.map(Math.abs), 1) : 1;
-
   let currentLayer = "overlooked";
   const markers = [];
   let labelMarkers = [];
 
+  // Only the "overlooked" layer plots city dots (districts/eshram remove
+  // them for the choropleth -- see redraw()), so this has one case.
   function styleFor(record) {
-    if (currentLayer === "overlooked") {
-      const ws = workStressById.get(record.id);
-      const count = ws ? ws.shoulder : 0;
-      const maxCount = Math.max(1, ...[...workStressById.values()].map((w) => w.shoulder));
-      return {
-        radius: count <= 0 ? 3.5 : 4 + Math.min(11, count * 1.6),
-        color: colorForOverlooked(count, maxCount),
-        glow: count > 0,
-        opacity: count <= 0 ? 0.55 : 0.9,
-      };
-    }
-    if (currentLayer === "wetbulb") {
-      const v = record.currentWetBulb;
-      return { radius: 7, color: v != null ? colorForSequential(v, minWetBulb, maxWetBulb) : "#555e69", glow: false, opacity: 0.9 };
-    }
-    const a = record.wetBulbAnomaly;
+    const ws = workStressById.get(record.id);
+    const count = ws ? ws.shoulder : 0;
+    const maxCount = Math.max(1, ...[...workStressById.values()].map((w) => w.shoulder));
     return {
-      radius: a != null ? 6 + Math.min(8, Math.abs(a) * 2) : 5,
-      color: a != null ? colorForAnomaly(a, maxAbsAnomaly) : "#555e69",
-      glow: false,
-      opacity: 0.9,
+      radius: count <= 0 ? 3.5 : 4 + Math.min(11, count * 1.6),
+      color: colorForOverlooked(count, maxCount),
+      glow: count > 0,
+      opacity: count <= 0 ? 0.55 : 0.9,
     };
   }
 
@@ -196,8 +152,6 @@ async function initMap() {
       <div class="popup-state">${record.state}</div>
       ${ws ? `<div class="popup-row"><span class="label">Inside 11&ndash;5 window</span><span class="value">${ws.insideWindow} stress hr</span></div>` : ""}
       ${ws ? `<div class="popup-row"><span class="label">After dark (humidity)</span><span class="value">${ws.darkHumid} hr</span></div>` : ""}
-      <div class="popup-row"><span class="label">Current wet-bulb</span><span class="value">${record.currentWetBulb != null ? record.currentWetBulb.toFixed(1) + "&deg;C" : "n/a"}</span></div>
-      ${record.wetBulbAnomaly != null ? `<div class="popup-row"><span class="label">vs. 1991-2020 normal</span><span class="value">${record.wetBulbAnomaly >= 0 ? "+" : ""}${record.wetBulbAnomaly.toFixed(1)}&deg;C</span></div>` : ""}
       ${shoulderLine}
       ${hapPopupLine(record.state)}
     `;
@@ -450,14 +404,6 @@ async function initMap() {
         r: v <= 0 ? 3.5 : 4 + Math.min(11, v * 1.6),
       }));
       host.innerHTML = `<span>Overlooked hours (outside 11&ndash;5, sun up):</span>` + legendItems(stops) + `<span>size = hours out</span>`;
-    } else if (currentLayer === "wetbulb") {
-      const vals = [minWetBulb, (minWetBulb + maxWetBulb) / 2, maxWetBulb];
-      stops = vals.map((v) => ({ label: `${v.toFixed(0)}°C`, color: colorForSequential(v, minWetBulb, maxWetBulb), r: 7 }));
-      host.innerHTML = `<span>Current wet-bulb:</span>` + legendItems(stops);
-    } else {
-      const vals = [-maxAbsAnomaly, 0, maxAbsAnomaly];
-      stops = vals.map((v) => ({ label: `${v >= 0 ? "+" : ""}${v.toFixed(1)}°C`, color: colorForAnomaly(v, maxAbsAnomaly), r: 7 }));
-      host.innerHTML = `<span>Wet-bulb vs. normal:</span>` + legendItems(stops);
     }
   }
 

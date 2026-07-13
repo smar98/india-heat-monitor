@@ -574,3 +574,28 @@ registry" read as if the data were scoped to 2026 signups. Renamed to
 legend, caveat text); the actual snapshot date now surfaces dynamically
 from the data file (`meta.as_of`) instead of being hardcoded into copy
 that would otherwise go stale.
+
+## Step 15 — Dropped the wet-bulb and anomaly map layers (2026-07-13)
+
+The map shipped with two general-meteorology layers alongside the
+labor-focused ones: "Current wet-bulb" (today's physiology reading) and
+"Anomaly vs. 1991-2020 normal" (today's peak wet-bulb minus the
+climatological normal for the date). Both predate the project's pivot to
+a labor-exposure story and neither one advanced it — a raw wet-bulb
+reading and a same-day climate anomaly don't say anything about who is
+exposed or when, which is what every other layer on this map now answers
+(overlooked hours, district worker-hours at risk, e-Shram registrations).
+The anomaly layer specifically was never even documented on the methods
+page. Removed both, along with the code and data that only existed to
+feed them: `buildCityMetrics()` (replaced with a smaller
+`buildCityRecords()` that just resolves city identity + today's-data
+presence, since the map still needs that for every remaining layer),
+the `normals.json` fetch out of `loadAllData()`, and the now-orphaned
+`heat/data/normals.json` (3.7MB) and `scripts/compute_normals.py` — kept
+around only for the layers just removed, with nothing else in the
+pipeline reading either one. The "1991-2020 historical normal" methods
+section, which existed to document that data source, went with it.
+The wet-bulb temperature concept itself is untouched — it's still the
+first stage of the WBGT pipeline (Stull wet-bulb → Liljegren WBGT → NIOSH
+REL) and still explained in the glossary; only the standalone map layers
+built on it are gone.

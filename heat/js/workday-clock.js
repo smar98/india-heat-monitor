@@ -143,7 +143,7 @@ function renderWorkdayClock(cityId) {
 }
 
 async function initWorkdayClock() {
-  const { cities, latest, normals } = await loadAllData();
+  const { cities, latest } = await loadAllData();
   clockCities = cities;
   clockLatest = latest;
 

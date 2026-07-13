@@ -46,6 +46,17 @@ const LAYER_DEFS = {
       "Darker orange = more people spending more over-limit hours in the " +
       "very hours guidance recommends.",
   },
+  eshram: {
+    label: "Outdoor workforce — 2026 registry",
+    tag: "e-Shram · registrations",
+    caption:
+      "2026 recency check: e-Shram outdoor-sector registrations " +
+      "(agriculture + construction, Ministry of Labour, 2021-26), folded " +
+      "to the 2011 census district frame -- darker = more registered " +
+      "outdoor workers. Districts created after 2011 are counted in " +
+      "their 2011 parent; Telangana's fold into undivided Andhra Pradesh " +
+      "(see popup). Registrations are not a workforce count.",
+  },
 };
 
 // Design-handoff map tokens.
@@ -257,8 +268,11 @@ async function initMap() {
         fetch("data/india_districts_2011.geojson").then((r) => r.json()),
         fetch("data/district_workers.json").then((r) => r.json()),
         fetch("data/districts_daily.json").then((r) => r.json()),
-      ]).then(([geo, workers, daily]) => {
-        districtBundle = { geo, workers, daily };
+        // The 2026 registry layer is optional: if its file is missing the
+        // risk layer must keep working, so a failed fetch resolves to null.
+        fetch("data/district_eshram.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      ]).then(([geo, workers, daily, eshram]) => {
+        districtBundle = { geo, workers, daily, eshram };
         return districtBundle;
       });
     }
@@ -275,16 +289,32 @@ async function initMap() {
 
   const fmtWorkerHours = formatWorkerCount; // shared formatter from data.js
 
+  /* Two district modes share the geometry, ramp, and bin logic:
+   * "risk" (worker-hours at risk today) and "registry" (e-Shram 2026
+   * outdoor registrations). */
+  function districtMode() {
+    return currentLayer === "eshram" ? "registry" : "risk";
+  }
+
+  function districtValue(code) {
+    if (districtMode() === "registry") {
+      const e = districtBundle.eshram && districtBundle.eshram.districts[String(code)];
+      return e ? e.agri + e.constr : null;
+    }
+    const info = districtInfo(code);
+    return info ? info.exposure : null;
+  }
+
   function computeDistrictBins() {
     const values = [];
     for (const feat of districtBundle.geo.features) {
-      const info = districtInfo(feat.properties.censuscode);
-      if (info && info.exposure > 0) values.push(info.exposure);
+      const v = districtValue(feat.properties.censuscode);
+      if (v != null && v > 0) values.push(v);
     }
     values.sort((a, b) => a - b);
     const q = (p) => values.length ? values[Math.min(values.length - 1, Math.floor(p * values.length))] : 0;
-    // Exposure is heavily right-skewed (a few huge rural districts), so the
-    // class breaks are quantiles of the NONZERO values, not equal steps.
+    // Both measures are heavily right-skewed (a few huge rural districts),
+    // so the class breaks are quantiles of the NONZERO values, not equal steps.
     districtBins = [q(0.4), q(0.7), q(0.9), q(0.98)];
   }
 
@@ -308,9 +338,9 @@ async function initMap() {
   }
 
   function districtStyle(feature) {
-    const info = districtInfo(feature.properties.censuscode);
+    const v = districtValue(feature.properties.censuscode);
     return {
-      fillColor: info ? districtColor(info.exposure) : DISTRICT_NODATA,
+      fillColor: v != null ? districtColor(v) : DISTRICT_NODATA,
       fillOpacity: 1,
       color: "#0f1216",
       weight: 0.5,
@@ -320,6 +350,7 @@ async function initMap() {
 
   function districtPopupHtml(feature) {
     const p = feature.properties;
+    if (districtMode() === "registry") return registryPopupHtml(p);
     const info = districtInfo(p.censuscode);
     if (!info) {
       return `<div class="popup-city">${p.DISTRICT}</div>
@@ -339,6 +370,37 @@ async function initMap() {
       <div class="popup-row"><span class="label">Overlooked hours today</span><span class="value">${info.hours} hr</span></div>
       <div class="popup-row"><span class="label">Peak est. WBGT today</span><span class="value">${info.maxWbgt != null ? info.maxWbgt.toFixed(1) + "&deg;C" : "n/a"}</span></div>
       ${story}
+    `;
+  }
+
+  // These 10 Andhra Pradesh 2011-census districts are where Telangana sat
+  // before its 2014 split; the e-Shram join folds every modern Telangana
+  // district's registrations into whichever of these it was carved from
+  // (see scripts/build_district_eshram.py). Say so on the popup, not just
+  // in methods -- a reader who knows Telangana exists would otherwise read
+  // "Warangal, Andhra Pradesh" as a bug.
+  const TELANGANA_FOLDED_INTO_AP = new Set([532, 533, 534, 535, 536, 537, 538, 539, 540, 541]);
+
+  function registryPopupHtml(p) {
+    const e = districtBundle.eshram && districtBundle.eshram.districts[String(p.censuscode)];
+    const w = districtBundle.workers.districts[String(p.censuscode)];
+    const telanganaNote = TELANGANA_FOLDED_INTO_AP.has(p.censuscode)
+      ? `<div class="popup-row" style="color:#8b95a1;font-size:11px;">2011 frame: includes districts now in Telangana.</div>`
+      : "";
+    if (!e) {
+      return `<div class="popup-city">${p.DISTRICT}</div>
+        <div class="popup-state">${p.ST_NM}</div>
+        <div class="popup-row" style="color:#8b95a1;font-size:11px;">No matched e-Shram registrations for this 2011 district.</div>
+        ${telanganaNote}`;
+    }
+    return `
+      <div class="popup-city">${p.DISTRICT}</div>
+      <div class="popup-state">${p.ST_NM}</div>
+      <div class="popup-row"><span class="label">Registered, agriculture (2026)</span><span class="value">${fmtWorkerHours(e.agri)}</span></div>
+      <div class="popup-row"><span class="label">Registered, construction (2026)</span><span class="value">${fmtWorkerHours(e.constr)}</span></div>
+      <div class="popup-row"><span class="label">Outdoor workers (Census 2011)</span><span class="value">${w ? fmtWorkerHours(w.outdoor_workers) : "n/a"}</span></div>
+      <div class="popup-row" style="color:#8b95a1;font-size:11px;">Registrations (unorganised workers, ages 16&ndash;59, since 2021) &mdash; not a headcount, and not the risk layer's input.</div>
+      ${telanganaNote}
     `;
   }
 
@@ -364,13 +426,16 @@ async function initMap() {
     const host = document.getElementById("map-legend");
     if (!host) return;
     let stops;
-    if (currentLayer === "districts") {
+    if (currentLayer === "districts" || currentLayer === "eshram") {
       if (!districtBundle) { host.innerHTML = ""; return; }
       const items = [{ label: "0", color: DISTRICT_ZERO }].concat(
         districtBins.map((b, i) => ({ label: `&le;${fmtWorkerHours(b)}`, color: DISTRICT_COLORS[i] })),
         [{ label: `&gt;${fmtWorkerHours(districtBins[districtBins.length - 1])}`, color: DISTRICT_COLORS[4] }]
       );
-      host.innerHTML = `<span>Worker-hours at risk today (darker = more):</span>` + items.map((s) =>
+      const title = currentLayer === "eshram"
+        ? "Registered outdoor workers, 2026 (darker = more):"
+        : "Worker-hours at risk today (darker = more):";
+      host.innerHTML = `<span>${title}</span>` + items.map((s) =>
         `<span class="legend-item"><span class="legend-dot" style="width:13px;height:13px;border-radius:3px;background:${s.color};"></span>${s.label}</span>`
       ).join("");
       return;
@@ -410,15 +475,16 @@ async function initMap() {
       btn.classList.toggle("on", btn.dataset.layer === currentLayer);
     });
 
-    if (currentLayer === "districts") {
+    if (currentLayer === "districts" || currentLayer === "eshram") {
       // Choropleth view: city dots come off (polygon + dots is unreadable).
       for (const { marker } of markers) map.removeLayer(marker);
       renderLabels(); // clears the city labels (non-overlooked layer)
       const captionEl = document.getElementById("layer-caption");
       if (!districtBundle) {
-        captionEl.textContent = "Loading district data (boundaries + Census workforce + today's forecast)…";
+        captionEl.textContent = "Loading district data (boundaries + workforce + today's forecast)…";
+        const wanted = currentLayer;
         loadDistrictBundle().then(() => {
-          if (currentLayer !== "districts") return; // user already switched away
+          if (currentLayer !== wanted) return; // user already switched away
           redraw();
         }).catch((err) => {
           console.error(err);
@@ -427,13 +493,29 @@ async function initMap() {
         renderLegend();
         return;
       }
+      if (currentLayer === "eshram" && !districtBundle.eshram) {
+        captionEl.textContent = "The 2026 registry file isn't published yet — the layer lights up automatically once it lands.";
+        renderLegend();
+        return;
+      }
       renderDistrictLayer();
-      // Vintage + staleness, stated with the layer, not buried: workforce
-      // shares are 2011; the heat summary is dated and refreshed daily.
-      let caveat = ` Workforce: Census 2011 (structure moves slowly, but it is 2011 — post-2011 districts appear within parent boundaries). One forecast point per district, ~25 km grid.`;
-      const todayIst = nowInIst().dateKey;
-      if (districtBundle.daily.ist_date !== todayIst) {
-        caveat = ` ⚠ District heat shown is for ${districtBundle.daily.ist_date} (IST) — today's refresh hasn't landed yet.` + caveat;
+      let caveat;
+      if (currentLayer === "eshram") {
+        // The so-what is the cross-check: say how well the registry agrees
+        // with the census map the risk layer leans on, from the data file's
+        // own recorded validation stats.
+        const meta = districtBundle.eshram.meta || {};
+        caveat = meta.spearman_vs_census_outdoor
+          ? ` District-for-district, this 2026 geography agrees closely with the Census-2011 outdoor-workforce map (rank correlation ${meta.spearman_vs_census_outdoor}, as of ${meta.as_of}) — the risk layer isn't leaning on a stale picture.`
+          : "";
+      } else {
+        // Vintage + staleness, stated with the layer, not buried: workforce
+        // shares are 2011; the heat summary is dated and refreshed daily.
+        caveat = ` Workforce: Census 2011 (structure moves slowly, but it is 2011 — post-2011 districts appear within parent boundaries). One forecast point per district, ~25 km grid.`;
+        const todayIst = nowInIst().dateKey;
+        if (districtBundle.daily.ist_date !== todayIst) {
+          caveat = ` ⚠ District heat shown is for ${districtBundle.daily.ist_date} (IST) — today's refresh hasn't landed yet.` + caveat;
+        }
       }
       captionEl.textContent = def.caption + caveat;
       renderLegend();

@@ -522,6 +522,63 @@ REL [&deg;C-WBGT] = 56.7 &minus; 11.5&middot;log10(M)   (acclimatized workers)</
       uncertainties together &mdash; the layer ranks districts against each
       other; it does not measure any district's true exposure.
     </p>
+
+    <h3>The 2026 registry cross-check (e-Shram)</h3>
+    <p>
+      Because the census workforce shares are 15 years old, the map offers
+      a second, recent view: the &ldquo;Outdoor workforce &mdash; 2026
+      registry&rdquo; layer shades each district by its registrations on
+      <a href="https://eshram.gov.in/">e-Shram</a>, the Ministry of Labour
+      and Employment's national registry of unorganised workers, in the
+      two predominantly-outdoor occupation sectors it records
+      (agriculture and construction). Counts come from the ministry's
+      <a href="https://www.data.gov.in/resource/district-wise-demographic-data-unorganised-workers-registered-eshram-previous-day">district-wise
+      dataset on data.gov.in</a>, refreshed daily by the ministry; each
+      district's figure is an exact filtered count of individual
+      registration records, queried &mdash; not estimated &mdash; from the
+      full registry.
+    </p>
+    <p>
+      e-Shram reports today's ~780 districts; the map uses the 640
+      districts of the 2011 census. We fold every post-2011 district back
+      into its 2011 parent using a documented rename-and-split table
+      (<a href="https://github.com/smar98/india-heat-monitor/blob/main/scripts/build_district_eshram.py">205
+      entries in the public build script</a>) &mdash; things like Prayagraj&rarr;Allahabad,
+      Gurugram&rarr;Gurgaon, and Karnataka's 2014 renames (Bengaluru&larr;Bangalore,
+      Mysuru&larr;Mysore, and others). All 640 census districts join: 100% coverage,
+      0% of registrations unmatched.
+    </p>
+    <p>
+      <strong>Telangana is a special case.</strong> Created in 2014, it does
+      not exist in the 2011 census frame: its registrations are counted
+      under the undivided Andhra Pradesh districts they were carved from,
+      so the polygon labelled &ldquo;Warangal, Andhra Pradesh&rdquo; on this
+      layer includes today's Warangal Urban, Warangal Rural, Mahabubabad,
+      Jayashankar Bhupalpally, Jangaon, and Mulugu &mdash; the map popup
+      says so for every affected district. Separately, 22 newer districts
+      nationwide were carved from more than one 2011 parent; each is
+      assigned wholly to its majority parent, a modeling choice that
+      totals about 1% of national registrations, too small to move the map.
+    </p>
+    <p>
+      The point of the layer is the cross-check itself: district-for-district,
+      the 2026 registration geography agrees with the Census-2011
+      outdoor-workforce map at a rank correlation of about 0.81 (recomputed
+      at every build and shown on the layer) &mdash; broad agreement, not
+      identity, and evidence that the worker-hours risk layer is not
+      leaning on a stale picture of where outdoor workers are.
+    </p>
+    <p class="caveat">
+      Registrations are not a workforce count. e-Shram covers unorganised
+      workers aged 16&ndash;59 who have registered since 2021 &mdash;
+      enrollment is incentive-driven and its completeness varies by state
+      &mdash; and it excludes the organised/formal workforce (which is why
+      mining, largely formal, is not part of this layer's definition). That
+      is also why the layer is read by rank correlation, not by level: the
+      risk layer's weights remain the Census 2011 main-worker counts; the
+      registry layer is a corroborating view, never an input to any
+      computed number.
+    </p>
   </section>
 
   <section>

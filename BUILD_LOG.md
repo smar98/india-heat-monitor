@@ -509,3 +509,58 @@ Liljegren accuracy caveat now attributes its ~1°C figure to the paper's
 own U.S. validation sites and says plainly that no Indian
 measured-WBGT validation exists; a root redirect and social-share
 metadata were added.
+
+## Step 14 — A 2026 recency check on the workforce map (e-Shram)
+
+The district worker-hours layer weights districts by Census-2011 outdoor
+main-worker counts — accurate structure, but 15 years old. This step adds
+a second, independent read: e-Shram, the Ministry of Labour's live
+registry of unorganised-worker registrations, harvested district-by-
+district (agriculture and construction sectors) via data.gov.in's public
+API and folded onto the same 2011 district frame the map already uses.
+
+The harvest itself needed persistence: the API's gateway returned 502s
+under any concurrency and intermittently under the default Python-urllib
+User-Agent specifically — fixed by sending a browser User-Agent and
+running the ~2,700 count-queries strictly sequentially, checkpointed so
+an interruption costs nothing.
+
+The harder problem was the join. India has created roughly 150 new
+districts and renamed several dozen since 2011 — Telangana split whole
+from Andhra Pradesh in 2014; Karnataka renamed ten districts that same
+year; Assam, Chhattisgarh, Manipur, Rajasthan, Andhra Pradesh, Gujarat,
+Tamil Nadu, and others have each carved new districts since. A
+first-pass join (documented renames only, plus fuzzy matching) landed at
+89.5% coverage with a 0.765 rank correlation against the census layer —
+under the ship gates, correctly, because the gap wasn't random noise: it
+was concentrated in exactly the states where new districts are newest
+and most numerous, which would have shown up as a biased map, not an
+honest partial one.
+
+Built out the crosswalk properly instead: a 205-entry rename/split-to-
+2011-parent table, covering every state with post-2011 boundary changes,
+plus five state-name aliases (the census file's own idiosyncratic
+spellings — "Arunanchal Pradesh," "Andaman & Nicobar Island" — and
+Telangana, which the 2011 frame has no entry for at all). The audit also
+caught a live false-positive already latent in the fuzzy-matching logic
+(North Garo Hills was silently matching South Garo Hills at a passing
+score; the documented table now assigns it to its real 2011 parent, East
+Garo Hills) — the join now logs every fuzzy match it uses so a future
+harvest can't repeat that silently.
+
+Result: all 640 census districts join, 0% of registrations unmatched,
+rank correlation 0.81. Twenty-two of the newest districts were carved
+from more than one 2011 parent; each is assigned to its majority parent,
+a modeling choice disclosed on the methods page and bounded at about 1%
+of national registrations — small enough that it cannot move the map.
+Telangana's registrations, folded into their undivided-Andhra-Pradesh
+parents, get their own disclosure in both methods and the map popup
+itself, so a reader who knows Telangana exists doesn't read "Warangal,
+Andhra Pradesh" as a bug.
+
+Shipped as a fourth map layer ("Outdoor workforce — 2026 registry"),
+sharing the district geometry, ramp, and legend logic with the existing
+worker-hours layer. Ship gates were tightened after the fact (coverage
+≥98%, unmatched ≤1%, rank correlation ≥0.8) so they now catch future
+drift — new districts India creates after this build — rather than
+re-litigating the gap this step just closed.

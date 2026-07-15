@@ -6,9 +6,11 @@ directory instead of ever calling getcwd()."""
 
 import functools
 import http.server
+import os
 
 PORT = 8000
-DIRECTORY = "/Users/sanch/Desktop/Data Viz Project 1"
+# Repo root (parent of scripts/), so /heat/ paths work from any checkout.
+DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 Handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=DIRECTORY)
 

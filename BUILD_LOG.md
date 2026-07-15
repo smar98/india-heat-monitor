@@ -233,7 +233,7 @@ into something more defensible.
 
 ## Step 7 — External review: time semantics, validation gate, so-what layer (2026-07-04)
 
-The live dashboard was run past an external AI reviewer (Codex) alongside a
+The live dashboard was run past an external review alongside a
 fresh read-through. That surfaced one genuine launch blocker and several
 legitimate improvements.
 
@@ -295,9 +295,8 @@ support a stable "humid coastal cities are underrated" story — which cities
 climb flips day to day with sun and wind; (2) India's warning system is not
 humidity-blind (IMD defines "warm night" and "hot and humid" categories), so
 a critique built on "India ignores humidity" wouldn't survive scrutiny; and
-(3) two independent reviews (a five-advisor LLM council and the external
-Codex reviews) both identified the misranking framing as the weakest,
-most-attackable part. Rather than defend it, the project narrowed to the
+(3) two independent reviews both identified the misranking framing
+as the weakest, most-attackable part. Rather than defend it, the project narrowed to the
 claim the evidence actually supports.
 
 **The reframe** (`7685911`, `ee22b4e`, `4c148c3`): India's Heat Action Plans
@@ -602,8 +601,8 @@ built on it are gone.
 
 ## Step 16 — HAP panel promoted, trend panel made collapsible, correlation cross-referenced (2026-07-13)
 
-Three small fixes from an owner read-through, planned with a second model
-(Fable) as advisor and reviewed after implementation:
+Three small fixes from an owner read-through, each planned first and
+reviewed after implementation:
 
 **The HAP policy card was reading as a footnote.** It had real content —
 a verbatim quoted work-hour window with a source link, plus the CPR-2023

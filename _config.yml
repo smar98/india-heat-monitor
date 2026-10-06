@@ -1,0 +1,7 @@
+# Keep working files out of the published Pages site (they stay in the repo).
+exclude:
+  - BUILD_LOG.md
+  - scripts
+  - tests
+  - pytest.ini
+  - README.md

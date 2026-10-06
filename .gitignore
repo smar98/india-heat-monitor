@@ -6,15 +6,15 @@ venv/
 .pytest_cache/
 .claude/
 
-# Local-only context/handoff doc — must NOT be published to the public repo
+# Local-only notes
 HANDOFF.md
 
-# Local-only design references (Claude design handoff bundle) — keep off the public repo
+# Local-only design references
 design/
 
 # one-time trend backfill cache (regenerable; assembled into heat/data/trends.json)
 data/trends_cache/
 
-# Pre-pivot prior-art review — internal working doc, removed from the public repo 2026-07-10
+# Local-only working doc
 existing_tools_research.md
 data/eshram_cache/

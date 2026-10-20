@@ -4,8 +4,7 @@ BEFORE committing the result -- in GitHub Actions this failing means the
 workflow fails and the previous (valid) data stays live, rather than a
 corrupt file silently replacing it.
 
-Checks, per the project's "a data gap must never masquerade as no risk"
-rule:
+Checks:
   - file parses, was generated recently (not a stale re-commit)
   - every city in cities.json is present exactly once, with >= 24 hours
   - hourly timestamps are contiguous (no silent gaps) in IST

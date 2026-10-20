@@ -4,17 +4,7 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
-.claude/
-
-# Local-only notes
-HANDOFF.md
-
-# Local-only design references
-design/
 
 # one-time trend backfill cache (regenerable; assembled into heat/data/trends.json)
 data/trends_cache/
-
-# Local-only working doc
-existing_tools_research.md
 data/eshram_cache/

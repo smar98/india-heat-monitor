@@ -14,8 +14,7 @@
  * recomputes together.
  */
 
-// Tier colors are the design handoff's (design/README.md) and match the
-// legend swatches in index.html 1:1.
+// Tier colors match the legend swatches in index.html 1:1.
 const CLOCK_TIER_COLOR = {
   "below-rel": "#2f3a44",
   "stress-window": "#7a5238",
@@ -88,8 +87,8 @@ function renderWorkdayClock(cityId) {
     const cellsEl = document.createElement("div");
     cellsEl.className = "clock-cells";
 
-    // Shaded 11am-5pm avoidance band overlaid across the row (design
-    // handoff). Positioned by the row's actual hour span, since a partial
+    // Shaded 11am-5pm avoidance band overlaid across the row. Positioned
+    // by the row's actual hour span, since a partial
     // day (data starting mid-day) would make fixed 11/24 fractions wrong.
     const firstHour = row[0].istHour;
     const lastHour = row[row.length - 1].istHour;

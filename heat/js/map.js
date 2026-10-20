@@ -5,9 +5,9 @@
  * Toggle layers: district worker-hours at risk, and the e-Shram registry.
  *
  * Dark console restyle: no raster basemap -- the vendored India state
- * GeoJSON is rendered as a dark landmass (design-handoff tokens), which
+ * GeoJSON is rendered as a dark landmass, which
  * also sidesteps tile-label language issues entirely. Pan/zoom/popups stay:
- * the interactive map is the centerpiece, per the project brief.
+ * the interactive map is the centerpiece.
  */
 
 const LAYER_DEFS = {
@@ -44,7 +44,7 @@ const LAYER_DEFS = {
   },
 };
 
-// Design-handoff map tokens.
+// Map theme tokens.
 const MAP_THEME = {
   land: "#1c2229",
   border: "#2f3945",
@@ -182,8 +182,8 @@ async function initMap() {
     markers.push({ record, marker });
   }
 
-  /* Mono labels with a dark halo for the top-5 overlooked cities (design
-   * handoff). Rebuilt on every redraw; only shown on the overlooked layer. */
+  /* Mono labels with a dark halo for the top-5 overlooked cities.
+   * Rebuilt on every redraw; only shown on the overlooked layer. */
   function renderLabels() {
     for (const lm of labelMarkers) map.removeLayer(lm);
     labelMarkers = [];

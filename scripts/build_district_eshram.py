@@ -11,9 +11,9 @@ downloaded in bulk: for each district code the script issues filtered
 count queries and reads the API's `total` field.
 
 Requires a data.gov.in API key in the DATAGOV_API_KEY environment
-variable (free registration). Two practical notes learned the hard way:
-the gateway 502s the default Python-urllib User-Agent under load, so a
-browser UA is sent; and the ~2,700 count queries take a couple of hours
+variable (free registration). Two practical notes:
+the gateway 502s the default Python-urllib User-Agent under load, so the
+script sends an identifying UA; and the ~2,700 count queries take a couple of hours
 at a polite pace. Progress is checkpointed to data/eshram_cache/
 (gitignored) and the script resumes for free if interrupted.
 
@@ -29,8 +29,8 @@ back into their 2011 parent (Telangana districts fold into the undivided-
 AP district they were carved from). 22 of those entries were carved from
 more than one 2011 parent; each is assigned wholly to its majority parent,
 a modeling choice that totals ~1% of national registrations. Integrity
-gates, now tuned to catch drift from *future* re-harvests (new districts
-keep getting created) rather than the known 2011-vs-now gap: >=98% of the
+gates for drift in future re-harvests (new districts
+keep getting created): >=98% of the
 640 Census districts must join, unmatched registrations must stay under 1%
 of the national outdoor total, and the joined counts must rank-correlate
 with the Census outdoor-workforce file (Spearman >= 0.8) -- if the registry
@@ -81,7 +81,7 @@ STATE_ALIASES = {
 # assign the whole count to the majority parent (~1% of national
 # registrations in total -- see module docstring).
 RENAMES = {
-    # Original documented renames (predate the state-by-state expansion below)
+    # Documented renames
     "PRAYAGRAJ": "ALLAHABAD", "AYODHYA": "FAIZABAD", "GURUGRAM": "GURGAON",
     "BHADOHI": "SANT RAVIDAS NAGAR", "AMROHA": "JYOTIBA PHULE NAGAR",
     "HATHRAS": "MAHAMAYA NAGAR", "DHOLPUR": "DHAULPUR", "KAIMUR BHABUA": "KAIMUR",
@@ -199,7 +199,7 @@ RENAMES = {
     "KAKCHING": "THOUBAL", "KANGPOKPI": "SENAPATI", "TENGNOUPAL": "CHANDEL",
     "JIRIBAM": "IMPHAL EAST", "NONEY": "TAMENGLONG", "KAMJONG": "UKHRUL",
     "PHERZAWL": "CHURACHANDPUR",
-    # Meghalaya splits (North Garo Hills also fixes a live fuzzy false-positive -> South Garo Hills)
+    # Meghalaya splits
     "NORTH GARO HILLS": "EAST GARO HILLS", "SOUTH WEST GARO HILLS": "WEST GARO HILLS",
     "SOUTH WEST KHASI HILLS": "WEST KHASI HILLS", "EASTERN WEST KHASI HILLS": "WEST KHASI HILLS",
     # Mizoram 2019 splits
@@ -240,7 +240,7 @@ def query(params, key, tries=60):
     params = dict(params, **{"api-key": key, "format": "json"})
     url = BASE + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(
-        url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"})
+        url, headers={"User-Agent": "overlooked-hours-builder"})
     for attempt in range(tries):
         try:
             with urllib.request.urlopen(req, timeout=90) as r:

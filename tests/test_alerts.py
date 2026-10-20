@@ -44,7 +44,7 @@ UTTARAKHAND_POLY = [
 CAP_HEAT_FIXTURE = f"""<?xml version="1.0" encoding="UTF-8"?>
 <cap:alert xmlns:cap="urn:oasis:names:tc:emergency:cap:1.2">
   <cap:identifier>urn:oid:2.49.0.1.356.0.2026.7.9.10.40.50</cap:identifier>
-  <cap:sender>rainfallnwfc@gmail.com</cap:sender>
+  <cap:sender>alerts@example.org</cap:sender>
   <cap:sent>2026-07-09T16:10:50+05:30</cap:sent>
   <cap:status>Actual</cap:status>
   <cap:msgType>Alert</cap:msgType>

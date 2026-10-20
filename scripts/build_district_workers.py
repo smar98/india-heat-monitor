@@ -37,7 +37,6 @@ import csv
 import io
 import json
 import os
-import ssl
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -98,17 +97,10 @@ COL_PLANTATION = 15       # NIC A - plantation/livestock/forestry/fishing - pers
 COL_MINING = 18           # NIC B - persons
 COL_CONSTRUCTION = 30     # NIC F - persons
 
-# The census site's TLS chain doesn't verify on stock macOS Python; these are
-# public statistical files fetched over HTTPS, integrity-checked by the two
-# gates below.
-SSL_CTX = ssl.create_default_context()
-SSL_CTX.check_hostname = False
-SSL_CTX.verify_mode = ssl.CERT_NONE
-
 
 def fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=120, context=SSL_CTX) as resp:
+    with urllib.request.urlopen(req, timeout=120) as resp:
         return resp.read()
 
 

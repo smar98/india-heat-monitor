@@ -84,11 +84,6 @@ function buildCityRecords(cities, latest) {
   return records;
 }
 
-// (The old dry-bulb-rank vs WBGT-rank "misranking" computation, and the
-// fixed moderate-work NIOSH constants that supported it, were removed when
-// the dashboard reframed around the overlooked-hours claim -- see BUILD_LOG.md.
-// The NIOSH equations now live below with a selectable workload.)
-
 const MONTH_NAMES = ["January","February","March","April","May","June",
   "July","August","September","October","November","December"];
 
@@ -247,9 +242,7 @@ function computeOverlookedSummary(cities, latest, relThreshold) {
  *
  * time_ist is already IST wall-clock time as labeled by Open-Meteo (the
  * pipeline requests timezone=Asia/Kolkata specifically so this is a direct
- * read, not a UTC+5:30 arithmetic conversion done client-side -- an earlier
- * version did that arithmetic and got the label wrong, see BUILD_LOG.md
- * step 7).
+ * read, not a client-side UTC+5:30 conversion).
  */
 function buildHourlySeriesForCity(cityId, latest, relThreshold) {
   const cityLatest = latest.cities.find((c) => c.id === cityId);

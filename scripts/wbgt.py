@@ -1,7 +1,7 @@
 """
-Heat-metric functions for the India Humid Heat Monitor.
+Heat-metric functions for The Overlooked Hours.
 
-Keeps three metrics strictly separate, per this project's editorial rule:
+Keeps three metrics strictly separate:
   1. Dry-bulb temperature -- the raw value from Open-Meteo, used as-is.
   2. Wet-bulb temperature -- Stull (2011) empirical approximation.
   3. Estimated WBGT -- Liljegren et al. (2008) model (see liljegren_wbgt.py),
@@ -112,8 +112,7 @@ def estimated_wbgt(
 # Source: NIOSH, "Criteria for a Recommended Standard: Occupational Exposure
 # to Heat and Hot Environments," DHHS (NIOSH) Publication 2016-106, Chapter
 # 8.1, p.93-94 (equations) and Table 5-1, p.101 (cross-standard comparison).
-# https://www.cdc.gov/niosh/docs/2016-106/ (PDF verified directly, not via a
-# secondary paraphrase -- see this project's build notes).
+# https://www.cdc.gov/niosh/docs/2016-106/
 #
 #   RAL [C-WBGT] = 59.9 - 14.1 * log10(M)   -- unacclimatized workers
 #   REL [C-WBGT] = 56.7 - 11.5 * log10(M)   -- acclimatized workers

@@ -1,10 +1,6 @@
 /*
- * "The Overlooked Hours" — dark console theme.
- * Ported from the design handoff (option 1c "The Console", kept locally in
- * design/README.md): Bricolage Grotesque for display, Hanken Grotesk for
- * body, Spline Sans Mono for data/meta. Tokens below are the handoff's.
- * Shared by index.html (the console) and methods.html (prose page).
- * The previous light "policy memo" theme lives on the classic-frontend branch.
+ * "The Overlooked Hours" dark console theme.
+ * Shared by index.html and methods.html.
  */
 
 :root {

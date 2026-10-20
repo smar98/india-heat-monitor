@@ -37,9 +37,6 @@ other's thresholds:
   reported for acclimatized workers (REL) as the defensible default for
   India's chronically heat-exposed outdoor laborers.
 
-Language discipline: the site says "exceeds the NIOSH heat-stress reference
-limit," never "safe hours."
-
 ## How it's built
 
 - Static site: plain HTML/CSS/JS, no build step. Hosted on GitHub Pages.
@@ -50,7 +47,7 @@ limit," never "safe hours."
   anomaly layer.
 
 See `heat/methods.html` for full methodology, sources, validity ranges, and
-caveats, and `BUILD_LOG.md` for the build history and decisions.
+caveats.
 
 > Framing note: this is an exploratory, transparent, live policy dashboard
 > highlighting a plausible blind spot in fixed work-hour guidance — not

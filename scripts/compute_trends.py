@@ -21,7 +21,7 @@ an annual-count chart. The 11-5 window is TODAY'S audited HAP union applied
 to past years -- the chart asks "how many hours would today's guidance
 overlook," labeled as such on the page.
 
-Cold-hour shortcut (rigorous): WBGT = 0.7*Tnwb + 0.2*Tg + 0.1*Ta with
+Cold-hour shortcut: WBGT = 0.7*Tnwb + 0.2*Tg + 0.1*Ta with
 Tnwb <= Ta and, generously, Tg <= Ta + 35 (the live pipeline's observed
 maximum globe excess is 25.3 C; 35 adds margin). So WBGT <= Ta + 7, and any
 hour with Ta < 16.5 C cannot reach the lowest threshold used here
@@ -104,8 +104,7 @@ def fetch_block(lat, lon, y0, y1):
     delay = 5.0
     for attempt in range(1, MAX_RETRIES + 1):
         # Transient network failures (DNS blips, dropped connections) get the
-        # same backoff as 429s -- a multi-hour run WILL hit at least one, and
-        # an unhandled one previously killed the run 25 blocks from the end.
+        # same backoff as 429s, since a multi-hour run will hit at least one.
         try:
             resp = requests.get(ARCHIVE_URL, params=params, timeout=180)
         except (requests.ConnectionError, requests.Timeout) as e:

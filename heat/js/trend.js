@@ -10,7 +10,7 @@
  * the panel scrolls into view, so the ~0.4MB history never delays the
  * live dashboard.
  *
- * Honesty notes rendered with the chart (not just here): reanalysis vs the
+ * Notes rendered with the chart (not just here): reanalysis vs the
  * live forecast are different data products and are never mixed; the 11-5
  * avoidance window is TODAY'S audited HAP union applied to past years; the
  * band is the REL +/- 1C sensitivity, matching the headline's.
